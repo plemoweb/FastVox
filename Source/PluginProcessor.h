@@ -296,11 +296,11 @@ private:
 
     juce::dsp::Compressor<float> compressor;
 
-    juce::AudioParameterFloat* attack{ nullptr };
-    juce::AudioParameterFloat* release{ nullptr };
-    juce::AudioParameterFloat* threshold{ nullptr };
-    juce::AudioParameterChoice* ratio{ nullptr };
-    juce::AudioParameterBool* compressorBypassed{ nullptr };
+    juce::AudioParameterFloat* compAttack{ nullptr };
+    juce::AudioParameterFloat* compRelease{ nullptr };
+    juce::AudioParameterFloat* compThreshold{ nullptr };
+    juce::AudioParameterChoice* compRatio{ nullptr };
+    juce::AudioParameterBool* compBypassed{ nullptr };
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FastVoxAudioProcessor)
 };

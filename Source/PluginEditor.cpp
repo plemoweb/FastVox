@@ -628,7 +628,7 @@ juce::Rectangle<int> ResponseCurveComponent::getAnalysisArea()
     return bounds;
 }
 //==============================================================================
-FastVoxAudioProcessorEditor::FastVoxAudioProcessorEditor(FastVoxAudioProcessor & p)
+FastVoxAudioProcessorEditor::FastVoxAudioProcessorEditor(FastVoxAudioProcessor& p)
     : AudioProcessorEditor(&p), audioProcessor(p),
     peakFreqSlider(*audioProcessor.apvts.getParameter("Peak Freq"), "Hz"),
     peakGainSlider(*audioProcessor.apvts.getParameter("Peak Gain"), "dB"),
@@ -637,9 +637,11 @@ FastVoxAudioProcessorEditor::FastVoxAudioProcessorEditor(FastVoxAudioProcessor &
     highShelfGainSlider(*audioProcessor.apvts.getParameter("HighShelf Gain"), "dB"),
     highShelfQualitySlider(*audioProcessor.apvts.getParameter("HighShelf Quality"), ""),
     lowCutFreqSlider(*audioProcessor.apvts.getParameter("LowCut Freq"), "Hz"),
-    //highShelfFreqSlider(*audioProcessor.apvts.getParameter("HighShelf Freq"), "Hz"),
     lowCutSlopeSlider(*audioProcessor.apvts.getParameter("LowCut Slope"), "dB/Oct"),
-    //highShelfSlopeSlider(*audioProcessor.apvts.getParameter("HighShelf Slope"), "db/Oct"),
+    compThresholdSlider(*audioProcessor.apvts.getParameter("Compressor Threshold"), "dB"),
+    compAttackSlider(*audioProcessor.apvts.getParameter("Compressor Attack"), "ms"),
+    compReleaseSlider(*audioProcessor.apvts.getParameter("Compressor Release"), "ms"),
+    compRatioSlider(*audioProcessor.apvts.getParameter("Compressor Ratio"), "dB"),
 
     responseCurveComponent(audioProcessor),
 
@@ -650,41 +652,54 @@ FastVoxAudioProcessorEditor::FastVoxAudioProcessorEditor(FastVoxAudioProcessor &
     highShelfGainSliderAttachment(audioProcessor.apvts, "HighShelf Gain", highShelfGainSlider),
     highShelfQualitySliderAttachment(audioProcessor.apvts, "HighShelf Quality", highShelfQualitySlider),
     lowCutFreqSliderAttachment(audioProcessor.apvts, "LowCut Freq", lowCutFreqSlider),
-    //lowCutFreqSliderAttachment(audioProcessor.apvts, "LowCut Freq", lowCutFreqSlider),
-    //highShelfFreqSliderAttachment(audioProcessor.apvts, "HighShelf Freq", highShelfFreqSlider),
     lowCutSlopeSliderAttachment(audioProcessor.apvts, "LowCut Slope", lowCutSlopeSlider),
-    //highShelfSlopeSliderAttachment(audioProcessor.apvts, "HighShelf Slope", highShelfSlopeSlider),
+    compThresholdAttachment(audioProcessor.apvts, "Compressor Threshold", compThresholdSlider),
+    compAttackAttachment(audioProcessor.apvts, "Compressor Attack", compAttackSlider),
+    compReleaseAttachment(audioProcessor.apvts, "Compressor Release", compReleaseSlider),
+    compRatioAttachment(audioProcessor.apvts, "Compressor Ratio", compRatioSlider),
 
     lowcutBypassButtonAttachment(audioProcessor.apvts, "LowCut Bypassed", lowcutBypassButton),
     peakBypassButtonAttachment(audioProcessor.apvts, "Peak Bypassed", peakBypassButton),
     highShelfBypassButtonAttachment(audioProcessor.apvts, "HighShelf Bypassed", highShelfBypassButton),
-    analyzerEnabledButtonAttachment(audioProcessor.apvts, "Analyzer Enabled", analyzerEnabledButton)
+    analyzerEnabledButtonAttachment(audioProcessor.apvts, "Analyzer Enabled", analyzerEnabledButton),
+    compBypassButtonAttachment(audioProcessor.apvts, "Compressor Bypassed", compBypassButton)
 {
-    peakFreqSlider.labels.add({ 0.f, "20Hz" });
-    peakFreqSlider.labels.add({ 1.f, "20kHz" });
+    //peakFreqSlider.labels.add({ 0.f, "20Hz" });
+    peakFreqSlider.labels.add({ 1.f, "Frequency" });
 
-    peakGainSlider.labels.add({ 0.f, "-24dB" });
-    peakGainSlider.labels.add({ 1.f, "+24dB" });
+    //peakGainSlider.labels.add({ 0.f, "-24dB" });
+    peakGainSlider.labels.add({ 1.f, "Gain" });
 
-    peakQualitySlider.labels.add({ 0.f, "0.1" });
-    peakQualitySlider.labels.add({ 1.f, "10.0" });
+    //peakQualitySlider.labels.add({ 0.f, "0.1" });
+    peakQualitySlider.labels.add({ 1.f, "Q" });
 
-    highShelfFreqSlider.labels.add({ 0.f, "20Hz" });
-    highShelfFreqSlider.labels.add({ 1.f, "20kHz" });
+    //highShelfFreqSlider.labels.add({ 0.f, "20Hz" });
+    highShelfFreqSlider.labels.add({ 1.f, "Frequency" });
 
-    highShelfGainSlider.labels.add({ 0.f, "-24dB" });
-    highShelfGainSlider.labels.add({ 1.f, "+24dB" });
+    //highShelfGainSlider.labels.add({ 0.f, "-24dB" });
+    highShelfGainSlider.labels.add({ 1.f, "Gain" });
 
-    highShelfQualitySlider.labels.add({ 0.f, "0.1" });
-    highShelfQualitySlider.labels.add({ 1.f, "10.0" });
+    //highShelfQualitySlider.labels.add({ 0.f, "0.1" });
+    highShelfQualitySlider.labels.add({ 1.f, "Q" });
 
-    lowCutFreqSlider.labels.add({ 0.f, "20Hz" });
-    lowCutFreqSlider.labels.add({ 1.f, "20kHz" });
+    //lowCutFreqSlider.labels.add({ 0.f, "20Hz" });
+    lowCutFreqSlider.labels.add({ 1.f, "Frequency" });
 
+    //compThresholdSlider.labels.add({ 0.f,"-60dB" });
+    compThresholdSlider.labels.add({ 1.f,"Threshold" });
+
+    //compAttackSlider.labels.add({ 0.f,"5ms" });
+    compAttackSlider.labels.add({ 1.f,"Attack" });
+
+    //compReleaseSlider.labels.add({ 0.f,"5ms" });
+    compReleaseSlider.labels.add({ 1.f,"Release" });
+
+    //compRatioSlider.labels.add({ 0.f,"1:1" });
+    compRatioSlider.labels.add({ 1.f,"Ratio" });
     
 
-    lowCutSlopeSlider.labels.add({ 0.0f, "12" });
-    lowCutSlopeSlider.labels.add({ 1.f, "48" });
+    //lowCutSlopeSlider.labels.add({ 0.0f, "12" });
+    lowCutSlopeSlider.labels.add({ 1.f, "Slope" });
 
     
 
@@ -696,6 +711,7 @@ FastVoxAudioProcessorEditor::FastVoxAudioProcessorEditor(FastVoxAudioProcessor &
     peakBypassButton.setLookAndFeel(&lnf);
     highShelfBypassButton.setLookAndFeel(&lnf);
     lowcutBypassButton.setLookAndFeel(&lnf);
+    compBypassButton.setLookAndFeel(&lnf);
 
     analyzerEnabledButton.setLookAndFeel(&lnf);
 
@@ -736,16 +752,18 @@ FastVoxAudioProcessorEditor::FastVoxAudioProcessorEditor(FastVoxAudioProcessor &
             }
         };
 
-    /*highShelfBypassButton.onClick = [safePtr]()
+    compBypassButton.onClick = [safePtr]()
         {
             if (auto* comp = safePtr.getComponent())
             {
-                auto bypassed = comp->highShelfBypassButton.getToggleState();
+                auto bypassed = comp->compBypassButton.getToggleState();
 
-                comp->highShelfFreqSlider.setEnabled(!bypassed);
-                comp->highShelfSlopeSlider.setEnabled(!bypassed);
+                comp->compThresholdSlider.setEnabled(!bypassed);
+                comp->compAttackSlider.setEnabled(!bypassed);
+                comp->compReleaseSlider.setEnabled(!bypassed);
+                comp->compRatioSlider.setEnabled(!bypassed);
             }
-        };*/
+        };
 
     analyzerEnabledButton.onClick = [safePtr]()
         {
@@ -764,7 +782,7 @@ FastVoxAudioProcessorEditor::~FastVoxAudioProcessorEditor()
     peakBypassButton.setLookAndFeel(nullptr);
     highShelfBypassButton.setLookAndFeel(nullptr);
     lowcutBypassButton.setLookAndFeel(nullptr);
-
+    compBypassButton.setLookAndFeel(nullptr);
     analyzerEnabledButton.setLookAndFeel(nullptr);
 }
 
@@ -782,7 +800,7 @@ void FastVoxAudioProcessorEditor::paint(juce::Graphics & g)
 
     g.setFont(Font("Iosevka Term Slab", 30, 0)); //https://github.com/be5invis/Iosevka
 
-    String title{ "Name of this shit" };
+    String title{ "Fast Vocal Chain!" };
     g.setFont(30);
     auto titleWidth = g.getCurrentFont().getStringWidth(title);
 
@@ -847,8 +865,11 @@ void FastVoxAudioProcessorEditor::resized()
 
     bounds.removeFromTop(5);
 
-    auto lowCutArea = bounds.removeFromLeft(bounds.getWidth() * 0.33);
-    auto highShelfArea = bounds.removeFromRight(bounds.getWidth() * 0.33);
+    auto lowCutArea = bounds.removeFromLeft(bounds.getWidth() * 0.2);
+    auto peakArea = bounds.removeFromLeft(bounds.getWidth() * 0.15);
+    auto highShelfArea = bounds.removeFromLeft(bounds.getWidth() * 0.15);
+    auto compArea1 = bounds.removeFromLeft(bounds.getWidth() * 0.35);
+    auto compArea2 = bounds.removeFromLeft(bounds.getWidth() * 0.35);
 
     lowcutBypassButton.setBounds(lowCutArea.removeFromTop(25));
     lowCutFreqSlider.setBounds(lowCutArea.removeFromTop(lowCutArea.getHeight() * 0.5));
@@ -859,10 +880,17 @@ void FastVoxAudioProcessorEditor::resized()
     highShelfGainSlider.setBounds(highShelfArea.removeFromTop(highShelfArea.getHeight() * 0.5));
     highShelfQualitySlider.setBounds(highShelfArea);
 
-    peakBypassButton.setBounds(bounds.removeFromTop(25));
-    peakFreqSlider.setBounds(bounds.removeFromTop(bounds.getHeight() * 0.33));
-    peakGainSlider.setBounds(bounds.removeFromTop(bounds.getHeight() * 0.5));
-    peakQualitySlider.setBounds(bounds);
+    peakBypassButton.setBounds(peakArea.removeFromTop(25));
+    peakFreqSlider.setBounds(peakArea.removeFromTop(peakArea.getHeight() * 0.33));
+    peakGainSlider.setBounds(peakArea.removeFromTop(peakArea.getHeight() * 0.5));
+    peakQualitySlider.setBounds(peakArea);
+
+    compBypassButton.setBounds(compArea1.removeFromTop(25));
+    compThresholdSlider.setBounds(compArea1.removeFromTop(compArea1.getHeight() * 0.5));
+    compRatioSlider.setBounds(compArea1);
+    compArea2.removeFromTop(25);
+    compAttackSlider.setBounds(compArea2.removeFromTop(compArea2.getHeight() * 0.5));
+    compReleaseSlider.setBounds(compArea2);
 
     //highShelfBypassButton.setBounds(bounds.removeFromTop(25));
     //highShelfFreqSlider.setBounds(bounds.removeFromTop(bounds.getHeight() * 0.33));
@@ -881,14 +909,17 @@ std::vector<juce::Component*> FastVoxAudioProcessorEditor::getComps()
         &highShelfGainSlider,
         &highShelfQualitySlider,
         &lowCutFreqSlider,
-        //&highShelfFreqSlider,
         &lowCutSlopeSlider,
-        //&highShelfSlopeSlider,
+        &compThresholdSlider,
+        &compAttackSlider,
+        &compReleaseSlider,
+        &compRatioSlider,
         &responseCurveComponent,
 
         &lowcutBypassButton,
         &peakBypassButton,
         &highShelfBypassButton,
+        &compBypassButton,
         &analyzerEnabledButton
     };
 }

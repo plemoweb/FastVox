@@ -22,16 +22,16 @@ FastVoxAudioProcessor::FastVoxAudioProcessor()
     )
 #endif
 {
-    attack = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Attack"));
-    jassert(attack != nullptr);
-    release = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Release"));
-    jassert(release != nullptr);
-    threshold = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Threshold"));
-    jassert(threshold != nullptr);
-    ratio = dynamic_cast<juce::AudioParameterChoice*>(apvts.getParameter("Ratio"));
-    jassert(ratio != nullptr);
-    compressorBypassed = dynamic_cast<juce::AudioParameterBool*>(apvts.getParameter("Compressor Bypassed"));
-    jassert(compressorBypassed != nullptr);
+    compAttack = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Compressor Attack"));
+    jassert(compAttack != nullptr);
+    compRelease = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Compressor Release"));
+    jassert(compRelease != nullptr);
+    compThreshold = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Compressor Threshold"));
+    jassert(compThreshold != nullptr);
+    compRatio = dynamic_cast<juce::AudioParameterChoice*>(apvts.getParameter("Compressor Ratio"));
+    jassert(compRatio != nullptr);
+    compBypassed = dynamic_cast<juce::AudioParameterBool*>(apvts.getParameter("Compressor Bypassed"));
+    jassert(compBypassed != nullptr);
 }
 
 FastVoxAudioProcessor::~FastVoxAudioProcessor()
@@ -204,13 +204,15 @@ void FastVoxAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     leftChannelFifo.update(buffer);
     rightChannelFifo.update(buffer);
 
-    compressor.setAttack(attack->get());
-    compressor.setRelease(release->get());
-    compressor.setThreshold(threshold->get());
-    compressor.setRatio(ratio->getCurrentChoiceName().getFloatValue());
+    compressor.setAttack(compAttack->get());
+    compressor.setRelease(compRelease->get());
+    compressor.setThreshold(compThreshold->get());
+    compressor.setRatio(compRatio->getCurrentChoiceName().getFloatValue());
 
     
     auto context = juce::dsp::ProcessContextReplacing<float>(block);
+
+    context.isBypassed = compBypassed->get();
     compressor.process(context);
 
 
@@ -224,8 +226,8 @@ bool FastVoxAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* FastVoxAudioProcessor::createEditor()
 {
-    //return new FastVoxAudioProcessorEditor(*this);
-        return new juce::GenericAudioProcessorEditor(*this);
+    return new FastVoxAudioProcessorEditor(*this);
+    //    return new juce::GenericAudioProcessorEditor(*this);
 }
 
 //==============================================================================
@@ -379,20 +381,20 @@ juce::AudioProcessorValueTreeState::ParameterLayout FastVoxAudioProcessor::creat
         juce::NormalisableRange<float>(0.1f, 10.f, 0.05f, 1.f),
         1.f));
 
-    layout.add(std::make_unique<juce::AudioParameterFloat>("Threshold",
-        "Threshold",
+    layout.add(std::make_unique<juce::AudioParameterFloat>("Compressor Threshold",
+        "Compressor Threshold",
         juce::NormalisableRange<float>(-60, 12, 1, 1),
         0));
 
     auto attackReleaseRange = juce::NormalisableRange<float>(5, 500, 1, 1);
 
-    layout.add(std::make_unique<juce::AudioParameterFloat>("Attack",
-        "Attack",
+    layout.add(std::make_unique<juce::AudioParameterFloat>("Compressor Attack",
+        "Compressor Attack",
         attackReleaseRange,
         50));
 
-    layout.add(std::make_unique<juce::AudioParameterFloat>("Release",
-        "Release",
+    layout.add(std::make_unique<juce::AudioParameterFloat>("Compressor Release",
+        "Compressor Release",
         attackReleaseRange,
         250));
 
@@ -402,7 +404,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout FastVoxAudioProcessor::creat
     {
         sa.add(juce::String(choice, 1));
     }
-    layout.add(std::make_unique<juce::AudioParameterChoice>("Ratio", "Ratio", sa, 3));
+    layout.add(std::make_unique<juce::AudioParameterChoice>("Compressor Ratio", "Compressor Ratio", sa, 3));
 
     juce::StringArray stringArray;
     for (int i = 0; i < 4; ++i)
