@@ -22,6 +22,16 @@ FastVoxAudioProcessor::FastVoxAudioProcessor()
     )
 #endif
 {
+    attack = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Attack"));
+    jassert(attack != nullptr);
+    release = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Release"));
+    jassert(release != nullptr);
+    threshold = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Threshold"));
+    jassert(threshold != nullptr);
+    ratio = dynamic_cast<juce::AudioParameterChoice*>(apvts.getParameter("Ratio"));
+    jassert(ratio != nullptr);
+    compressorBypassed = dynamic_cast<juce::AudioParameterBool*>(apvts.getParameter("Compressor Bypassed"));
+    jassert(compressorBypassed != nullptr);
 }
 
 FastVoxAudioProcessor::~FastVoxAudioProcessor()
@@ -117,6 +127,8 @@ void FastVoxAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock
     spec.numChannels = getTotalNumOutputChannels();
     osc.prepare(spec);
     osc.setFrequency(440);
+
+    compressor.prepare(spec);
 }
 
 void FastVoxAudioProcessor::releaseResources()
@@ -192,6 +204,16 @@ void FastVoxAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     leftChannelFifo.update(buffer);
     rightChannelFifo.update(buffer);
 
+    compressor.setAttack(attack->get());
+    compressor.setRelease(release->get());
+    compressor.setThreshold(threshold->get());
+    compressor.setRatio(ratio->getCurrentChoiceName().getFloatValue());
+
+    
+    auto context = juce::dsp::ProcessContextReplacing<float>(block);
+    compressor.process(context);
+
+
 }
 
 //==============================================================================
@@ -202,8 +224,8 @@ bool FastVoxAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* FastVoxAudioProcessor::createEditor()
 {
-    return new FastVoxAudioProcessorEditor(*this);
-    //    return new juce::GenericAudioProcessorEditor(*this);
+    //return new FastVoxAudioProcessorEditor(*this);
+        return new juce::GenericAudioProcessorEditor(*this);
 }
 
 //==============================================================================
@@ -374,7 +396,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout FastVoxAudioProcessor::creat
         attackReleaseRange,
         250));
 
-    auto choices = std::vector<double>{ 1,1.5,2,3,4,5,6,7,8,9,10,15,20 };
+    auto choices = std::vector<double>{ 1,1.5,2,3,4,5,6,7,8,9,10,15,20,50 };
     juce::StringArray sa;
     for (auto choice:choices)
     {
@@ -398,6 +420,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout FastVoxAudioProcessor::creat
     layout.add(std::make_unique<juce::AudioParameterBool>("Peak Bypassed", "Peak Bypassed", false));
     layout.add(std::make_unique<juce::AudioParameterBool>("HighShelf Bypassed", "HighShelf Bypassed", false));
     layout.add(std::make_unique<juce::AudioParameterBool>("Analyzer Enabled", "Analyzer Enabled", true));
+    layout.add(std::make_unique<juce::AudioParameterBool>("Compressor Bypassed", "Compressor Bypassed", false));
 
     return layout;
 }
