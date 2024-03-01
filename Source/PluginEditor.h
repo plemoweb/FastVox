@@ -109,7 +109,8 @@ struct AnalyzerPathGenerator
         float negativeInfinity)
     {
         auto top = fftBounds.getY();
-        auto bottom = fftBounds.getHeight();
+        //auto bottom = fftBounds.getHeight();
+        auto bottom = fftBounds.getBottom();
         auto width = fftBounds.getWidth();
 
         int numBins = (int)fftSize / 2;
@@ -121,7 +122,7 @@ struct AnalyzerPathGenerator
             {
                 return juce::jmap(v,
                     negativeInfinity, 0.f,
-                    float(bottom + 10), top);
+                    bottom, top);
             };
 
         auto y = map(renderData[0]);
@@ -225,6 +226,7 @@ struct PathProducer
     }
     void process(juce::Rectangle<float> fftBounds, double sampleRate);
     juce::Path getPath() { return leftChannelFFTPath; }
+    void updateNegativeInfinity(float ni) { negativeInfinity = ni; }
 private:
     SingleChannelSampleFifo<FastVoxAudioProcessor::BlockType>* leftChannelFifo;
 
@@ -235,6 +237,8 @@ private:
     AnalyzerPathGenerator<juce::Path> pathProducer;
 
     juce::Path leftChannelFFTPath;
+
+    float negativeInfinity{ -48.f };
 };
 
 struct ResponseCurveComponent : juce::Component,
@@ -374,6 +378,8 @@ private:
         compBypassButtonAttachment;
 
     LookAndFeel lnf;
+
+    
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FastVoxAudioProcessorEditor)
 };

@@ -515,6 +515,14 @@ void ResponseCurveComponent::resized()
 
     responseCurve.preallocateSpace(getWidth() * 3);
     updateResponseCurve();
+
+    auto fftBounds = getAnalysisArea().toFloat();
+    auto negInf = jmap(getLocalBounds().toFloat().getBottom(), fftBounds.getBottom(),
+        fftBounds.getY(), -48.f, 0.f);
+    DBG("Negative Infinity: " << negInf);
+    leftPathProducer.updateNegativeInfinity(negInf);
+    rightPathProducer.updateNegativeInfinity(negInf);
+    
 }
 
 void ResponseCurveComponent::parameterValueChanged(int parameterIndex, float newValue)
@@ -539,7 +547,7 @@ void PathProducer::process(juce::Rectangle<float> fftBounds, double sampleRate)
                 tempIncomingBuffer.getReadPointer(0, 0),
                 size);
 
-            leftChannelFFTDataGenerator.produceFFTDataForRendering(monoBuffer, -48.f);
+            leftChannelFFTDataGenerator.produceFFTDataForRendering(monoBuffer, negativeInfinity);
         }
     }
 
@@ -551,7 +559,7 @@ void PathProducer::process(juce::Rectangle<float> fftBounds, double sampleRate)
         std::vector<float> fftData;
         if (leftChannelFFTDataGenerator.getFFTData(fftData))
         {
-            pathProducer.generatePath(fftData, fftBounds, fftSize, binWidth, -48.f);
+            pathProducer.generatePath(fftData, fftBounds, fftSize, binWidth, negativeInfinity);
         }
     }
 
@@ -566,6 +574,7 @@ void ResponseCurveComponent::timerCallback()
     if (shouldShowFFTAnalysis)
     {
         auto fftBounds = getAnalysisArea().toFloat();
+        fftBounds.setBottom(getLocalBounds().getBottom());
         auto sampleRate = audioProcessor.getSampleRate();
 
         leftPathProducer.process(fftBounds, sampleRate);
