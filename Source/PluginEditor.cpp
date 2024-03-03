@@ -8,6 +8,19 @@ This file contains the basic framework code for a JUCE plugin editor.
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+juce::Rectangle<int> drawModuleBackground(juce::Graphics& g, juce::Rectangle<int> bounds)
+{
+    using namespace juce;
+    g.setColour(Colours::blueviolet);
+    g.fillAll();
+    auto localBounds = bounds;
+    bounds.reduce(3, 3);
+    g.setColour(Colours::black);
+    g.fillRoundedRectangle(bounds.toFloat(), 3);
+    g.drawRect(localBounds);
+    return bounds;
+}
+
 void LookAndFeel::drawRotarySlider(juce::Graphics & g,
     int x,
     int y,
@@ -254,7 +267,8 @@ ResponseCurveComponent::~ResponseCurveComponent()
 void ResponseCurveComponent::updateResponseCurve()
 {
     using namespace juce;
-    auto responseArea = getAnalysisArea();
+    auto bounds = getLocalBounds();
+    auto responseArea = getAnalysisArea(bounds);
 
     auto w = responseArea.getWidth();
 
@@ -329,9 +343,11 @@ void ResponseCurveComponent::paint(juce::Graphics & g)
     // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll(Colours::black);
 
-    drawBackgroundGrid(g);
+    auto bounds = drawModuleBackground(g, getLocalBounds());
 
-    auto responseArea = getAnalysisArea();
+    drawBackgroundGrid(g, bounds);
+
+    auto responseArea = getAnalysisArea(bounds);
 
     if (shouldShowFFTAnalysis)
     {
@@ -355,17 +371,17 @@ void ResponseCurveComponent::paint(juce::Graphics & g)
 
     border.setUsingNonZeroWinding(false);
 
-    border.addRoundedRectangle(getRenderArea(), 4);
+    border.addRoundedRectangle(getRenderArea(bounds), 4);
     border.addRectangle(getLocalBounds());
 
     g.setColour(Colours::black);
 
-    g.fillPath(border);
+    //g.fillPath(border);
 
-    drawTextLabels(g);
+    drawTextLabels(g, bounds);
 
     g.setColour(Colours::cornflowerblue);
-    g.drawRoundedRectangle(getRenderArea().toFloat(), 4.f, 1.f);
+    g.drawRoundedRectangle(getRenderArea(bounds).toFloat(), 4.f, 1.f);
 }
 
 std::vector<float> ResponseCurveComponent::getFrequencies()
@@ -399,12 +415,12 @@ std::vector<float> ResponseCurveComponent::getXs(const std::vector<float> &freqs
     return xs;
 }
 
-void ResponseCurveComponent::drawBackgroundGrid(juce::Graphics & g)
+void ResponseCurveComponent::drawBackgroundGrid(juce::Graphics & g, juce::Rectangle<int> bounds)
 {
     using namespace juce;
     auto freqs = getFrequencies();
 
-    auto renderArea = getAnalysisArea();
+    auto renderArea = getAnalysisArea(bounds);
     auto left = renderArea.getX();
     auto right = renderArea.getRight();
     auto top = renderArea.getY();
@@ -430,14 +446,14 @@ void ResponseCurveComponent::drawBackgroundGrid(juce::Graphics & g)
     }
 }
 
-void ResponseCurveComponent::drawTextLabels(juce::Graphics & g)
+void ResponseCurveComponent::drawTextLabels(juce::Graphics & g, juce::Rectangle<int> bounds)
 {
     using namespace juce;
     g.setColour(Colours::lightgrey);
     const int fontHeight = 10;
     g.setFont(fontHeight);
 
-    auto renderArea = getAnalysisArea();
+    auto renderArea = getAnalysisArea(bounds);
     auto left = renderArea.getX();
 
     auto top = renderArea.getY();
@@ -512,12 +528,12 @@ void ResponseCurveComponent::drawTextLabels(juce::Graphics & g)
 void ResponseCurveComponent::resized()
 {
     using namespace juce;
-
+    auto bounds = getLocalBounds();
     responseCurve.preallocateSpace(getWidth() * 3);
     updateResponseCurve();
 
-    auto fftBounds = getAnalysisArea().toFloat();
-    auto negInf = jmap(getLocalBounds().toFloat().getBottom(), fftBounds.getBottom(),
+    auto fftBounds = getAnalysisArea(bounds).toFloat();
+    auto negInf = jmap(bounds.toFloat().getBottom(), fftBounds.getBottom(),
         fftBounds.getY(), -48.f, 0.f);
     DBG("Negative Infinity: " << negInf);
     leftPathProducer.updateNegativeInfinity(negInf);
@@ -579,8 +595,9 @@ void ResponseCurveComponent::timerCallback()
 {
     if (shouldShowFFTAnalysis)
     {
-        auto fftBounds = getAnalysisArea().toFloat();
-        fftBounds.setBottom(getLocalBounds().getBottom());
+        auto bounds = getLocalBounds();
+        auto fftBounds = getAnalysisArea(bounds).toFloat();
+        fftBounds.setBottom(bounds.getBottom());
         auto sampleRate = audioProcessor.getSampleRate();
 
         leftPathProducer.process(fftBounds, sampleRate);
@@ -589,6 +606,7 @@ void ResponseCurveComponent::timerCallback()
 
     if (parametersChanged.compareAndSetBool(false, true))
     {
+        //auto bounds = getLocalBounds();
         updateChain();
         updateResponseCurve();
     }
@@ -622,9 +640,9 @@ void ResponseCurveComponent::updateChain()
     //    chainSettings.highShelfSlope);
 }
 
-juce::Rectangle<int> ResponseCurveComponent::getRenderArea()
+juce::Rectangle<int> ResponseCurveComponent::getRenderArea(juce::Rectangle<int> bounds)
 {
-    auto bounds = getLocalBounds();
+    //bounds = getLocalBounds();
 
     bounds.removeFromTop(12);
     bounds.removeFromBottom(2);
@@ -635,9 +653,9 @@ juce::Rectangle<int> ResponseCurveComponent::getRenderArea()
 }
 
 
-juce::Rectangle<int> ResponseCurveComponent::getAnalysisArea()
+juce::Rectangle<int> ResponseCurveComponent::getAnalysisArea(juce::Rectangle<int> bounds)
 {
-    auto bounds = getRenderArea();
+    bounds = getRenderArea(bounds);
     bounds.removeFromTop(4);
     bounds.removeFromBottom(4);
     return bounds;
