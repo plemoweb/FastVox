@@ -8,10 +8,11 @@ This file contains the basic framework code for a JUCE plugin editor.
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+
 juce::Rectangle<int> drawModuleBackground(juce::Graphics& g, juce::Rectangle<int> bounds)
 {
     using namespace juce;
-    g.setColour(Colours::blueviolet);
+    g.setColour(Colours::lightgrey);
     g.fillAll();
     auto localBounds = bounds;
     bounds.reduce(3, 3);
@@ -37,10 +38,10 @@ void LookAndFeel::drawRotarySlider(juce::Graphics & g,
 
     auto enabled = slider.isEnabled();
 
-    g.setColour(enabled ? Colours::black : Colours::darkgrey);
+    g.setColour(enabled ? Colours::white : Colours::black);
     g.fillEllipse(bounds);
 
-    g.setColour(enabled ? Colours::antiquewhite : Colours::grey);
+    g.setColour(enabled ? Colours::black : Colours::white);
     g.drawEllipse(bounds, 1.f);
 
     if (auto* rswl = dynamic_cast<RotarySliderWithLabels*>(&slider))
@@ -71,10 +72,10 @@ void LookAndFeel::drawRotarySlider(juce::Graphics & g,
         r.setSize(strWidth + 4, rswl->getTextHeight() + 2);
         r.setCentre(bounds.getCentre());
 
-        g.setColour(enabled ? Colours::black : Colours::darkgrey);
+        g.setColour(enabled ? Colours::black : Colours::white);
         g.fillRect(r);
 
-        g.setColour(enabled ? Colours::white : Colours::lightgrey);
+        g.setColour(enabled ? Colours::white : Colours::black);
         g.drawFittedText(text, r.toNearestInt(), juce::Justification::centred, 1);
     }
 }
@@ -161,7 +162,7 @@ void RotarySliderWithLabels::paint(juce::Graphics & g)
     auto center = sliderBounds.toFloat().getCentre();
     auto radius = sliderBounds.getWidth() * 0.5f;
 
-    g.setColour(Colours::black);
+    g.setColour(Colours::white);
     g.setFont(getTextHeight());
 
     auto numChoices = labels.size();
@@ -251,6 +252,8 @@ ResponseCurveComponent::ResponseCurveComponent(FastVoxAudioProcessor & p) :
     }
 
     updateChain();
+
+    //thresholdParam = compThreshold;
 
     startTimerHz(60);
 }
@@ -355,7 +358,7 @@ void ResponseCurveComponent::drawFFTAnalysis(juce::Graphics& g, juce::Rectangle<
     auto rightChannelFFTPath = rightPathProducer.getPath();
     rightChannelFFTPath.applyTransform(AffineTransform().translation(responseArea.getX(), responseArea.getY()));
 
-    g.setColour(Colour(215u, 201u, 134u));
+    g.setColour(Colours::lightblue);
     g.strokePath(rightChannelFFTPath, PathStrokeType(1.f));
 }
 
@@ -377,7 +380,7 @@ void ResponseCurveComponent::paint(juce::Graphics & g)
         
     }
 
-    g.setColour(Colours::pink);
+    g.setColour(Colours::white);
     g.strokePath(responseCurve, PathStrokeType(2.f));
 
     /*Path border;
@@ -393,7 +396,7 @@ void ResponseCurveComponent::paint(juce::Graphics & g)
 
     drawTextLabels(g, bounds);
 
-    g.setColour(Colours::cornflowerblue);
+    g.setColour(Colours::white);
     g.drawRoundedRectangle(getRenderArea(bounds).toFloat(), 4.f, 1.f);
 }
 
@@ -410,10 +413,17 @@ std::vector<float> ResponseCurveComponent::getFrequencies()
 
 std::vector<float> ResponseCurveComponent::getGains()
 {
-    return std::vector<float>
+    //return std::vector<float>
+    //{
+    //    -24, -12, 0, 12, 24
+    //};
+    std::vector<float> values;
+    auto increment = MAX_DECIBELS;
+    for (auto db = NEGATIVE_INFINITY; db <= MAX_DECIBELS; db += increment)
     {
-        -24, -12, 0, 12, 24
-    };
+        values.push_back(db);
+    }
+    return values;
 }
 
 std::vector<float> ResponseCurveComponent::getXs(const std::vector<float> &freqs, float left, float width)
@@ -452,9 +462,9 @@ void ResponseCurveComponent::drawBackgroundGrid(juce::Graphics & g, juce::Rectan
 
     for (auto gDb : gain)
     {
-        auto y = jmap(gDb, -24.f, 24.f, float(bottom), float(top));
+        auto y = jmap(gDb, NEGATIVE_INFINITY, MAX_DECIBELS, float(bottom), float(top));
 
-        g.setColour(gDb == 0.f ? Colours::darkgrey : Colours::darkgrey);
+        g.setColour(gDb == 0.f ? Colours::white : Colours::darkgrey);
         g.drawHorizontalLine(y, left, right);
     }
 }
@@ -462,7 +472,7 @@ void ResponseCurveComponent::drawBackgroundGrid(juce::Graphics & g, juce::Rectan
 void ResponseCurveComponent::drawTextLabels(juce::Graphics & g, juce::Rectangle<int> bounds)
 {
     using namespace juce;
-    g.setColour(Colours::lightgrey);
+    g.setColour(Colours::white);
     const int fontHeight = 10;
     g.setFont(fontHeight);
 
@@ -509,7 +519,7 @@ void ResponseCurveComponent::drawTextLabels(juce::Graphics & g, juce::Rectangle<
 
     for (auto gDb : gain)
     {
-        auto y = jmap(gDb, -24.f, 24.f, float(bottom), float(top));
+        auto y = jmap(gDb, NEGATIVE_INFINITY, MAX_DECIBELS, float(bottom), float(top));
 
         String str;
         if (gDb > 0)
@@ -523,17 +533,17 @@ void ResponseCurveComponent::drawTextLabels(juce::Graphics & g, juce::Rectangle<
         r.setX(bounds.getRight() - textWidth);
         r.setCentre(r.getCentreX(), y);
 
-        g.setColour(gDb == 0.f ? Colours::lightgrey : Colours::lightgrey);
+        g.setColour(gDb == 0.f ? Colours::white : Colours::lightgrey);
 
         g.drawFittedText(str, r, juce::Justification::centredLeft, 1);
 
-        str.clear();
-        str << (gDb - 24.f);
+        /*str.clear();
+        str << (gDb - 24.f);*/
 
         r.setX(bounds.getX()+1);
-        textWidth = g.getCurrentFont().getStringWidth(str);
-        r.setSize(textWidth, fontHeight);
-        g.setColour(Colours::lightgrey);
+        //textWidth = g.getCurrentFont().getStringWidth(str);
+        //r.setSize(textWidth, fontHeight);
+        //g.setColour(Colours::lightgrey);
         g.drawFittedText(str, r, juce::Justification::centredLeft, 1);
     }
 }
@@ -547,7 +557,7 @@ void ResponseCurveComponent::resized()
 
     auto fftBounds = getAnalysisArea(bounds).toFloat();
     auto negInf = jmap(bounds.toFloat().getBottom(), fftBounds.getBottom(),
-        fftBounds.getY(), -48.f, 0.f);
+        fftBounds.getY(), NEGATIVE_INFINITY, MAX_DECIBELS);
     DBG("Negative Infinity: " << negInf);
     leftPathProducer.updateNegativeInfinity(negInf);
     rightPathProducer.updateNegativeInfinity(negInf);
@@ -820,7 +830,7 @@ FastVoxAudioProcessorEditor::FastVoxAudioProcessorEditor(FastVoxAudioProcessor& 
             }
         };
 
-    setSize(1200, 500);
+    setSize(720, 450);
 }
 
 FastVoxAudioProcessorEditor::~FastVoxAudioProcessorEditor()
@@ -837,7 +847,7 @@ void FastVoxAudioProcessorEditor::paint(juce::Graphics & g)
 {
     using namespace juce;
 
-    g.fillAll(Colours::antiquewhite);
+    g.fillAll(Colour(34u, 34u, 34u));
 
     Path curve;
 
@@ -846,7 +856,7 @@ void FastVoxAudioProcessorEditor::paint(juce::Graphics & g)
 
     g.setFont(Font("Iosevka Term Slab", 30, 0)); //https://github.com/be5invis/Iosevka
 
-    String title{ "Fast Vocal Chain!" };
+    String title{ "PHONONIC" };
     g.setFont(30);
     auto titleWidth = g.getCurrentFont().getStringWidth(title);
 
@@ -874,7 +884,7 @@ void FastVoxAudioProcessorEditor::paint(juce::Graphics & g)
     g.fillPath(curve);
 
 
-    g.setColour(Colours::whitesmoke);
+    g.setColour(Colours::red);
     g.drawFittedText(title, bounds, juce::Justification::centredTop, 1);
 
     //g.setColour(Colours::black);
@@ -904,7 +914,7 @@ void FastVoxAudioProcessorEditor::resized()
 
     bounds.removeFromTop(5);
 
-    float hRatio = 25.f / 100.f; //JUCE_LIVE_CONSTANT(25) / 100.f;
+    float hRatio = 50.f / 100.f; //JUCE_LIVE_CONSTANT(25) / 100.f;
     auto responseArea = bounds.removeFromTop(bounds.getHeight() * hRatio); //change from 0.33 to 0.25 because I needed peak hz text to not overlap the slider thumb
 
     responseCurveComponent.setBounds(responseArea);

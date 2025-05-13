@@ -22,16 +22,34 @@ FastVoxAudioProcessor::FastVoxAudioProcessor()
     )
 #endif
 {
-    compAttack = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Compressor Attack"));
-    jassert(compAttack != nullptr);
-    compRelease = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Compressor Release"));
-    jassert(compRelease != nullptr);
-    compThreshold = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Compressor Threshold"));
-    jassert(compThreshold != nullptr);
-    compRatio = dynamic_cast<juce::AudioParameterChoice*>(apvts.getParameter("Compressor Ratio"));
-    jassert(compRatio != nullptr);
-    compBypassed = dynamic_cast<juce::AudioParameterBool*>(apvts.getParameter("Compressor Bypassed"));
-    jassert(compBypassed != nullptr);
+    using namespace Params;
+    const auto& params = GetParams();
+
+    auto floatHelper = [&apvts = this->apvts, &params](auto& param, const auto& paramName)
+        {
+            param = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter(params.at(paramName)));
+            jassert(param != nullptr);
+        };
+
+    floatHelper(compAttack, Names::Compressor_Attack);
+    floatHelper(compRelease, Names::Compressor_Release);
+    floatHelper(compThreshold, Names::Compressor_Threshold);
+
+    auto choiceHelper = [&apvts = this->apvts, &params](auto& param, const auto& paramName)
+        {
+            param = dynamic_cast<juce::AudioParameterChoice*>(apvts.getParameter(params.at(paramName)));
+            jassert(param != nullptr);
+        };
+
+    choiceHelper(compRatio, Names::Compressor_Ratio);
+    
+    auto boolHelper = [&apvts = this->apvts, &params](auto& param, const auto& paramName)
+        {
+            param = dynamic_cast<juce::AudioParameterBool*>(apvts.getParameter(params.at(paramName)));
+            jassert(param != nullptr);
+        };
+    
+    boolHelper(compBypassed, Names::Compressor_Bypassed);
 }
 
 FastVoxAudioProcessor::~FastVoxAudioProcessor()
@@ -344,57 +362,59 @@ void FastVoxAudioProcessor::updateFilters()
 
 juce::AudioProcessorValueTreeState::ParameterLayout FastVoxAudioProcessor::createParameterLayout()
 {
+    using namespace Params;
+    const auto& params = GetParams();
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
 
-    layout.add(std::make_unique<juce::AudioParameterFloat>("LowCut Freq",
-        "LowCut Freq",
-        juce::NormalisableRange<float>(20.f, 20000.f, 1.f, 0.25f),
+    layout.add(std::make_unique<juce::AudioParameterFloat>(params.at(Names::Low_Cut_Frequency),
+        params.at(Names::Low_Cut_Frequency),
+        juce::NormalisableRange<float>(MIN_FREQUENCY, MAX_FREQUENCY, 1.f, 0.25f),
         20.f));
 
-    layout.add(std::make_unique<juce::AudioParameterFloat>("HighShelf Freq",
-        "HighShelf Freq",
-        juce::NormalisableRange<float>(20.f, 20000.f, 1.f, 0.25f),
+    layout.add(std::make_unique<juce::AudioParameterFloat>(params.at(Names::High_Shelf_Frequency),
+        params.at(Names::High_Shelf_Frequency),
+        juce::NormalisableRange<float>(MIN_FREQUENCY, MAX_FREQUENCY, 1.f, 0.25f),
         20000.f));
 
-    layout.add(std::make_unique<juce::AudioParameterFloat>("HighShelf Gain",
-        "HighShelf Gain",
+    layout.add(std::make_unique<juce::AudioParameterFloat>(params.at(Names::High_Shelf_Gain),
+        params.at(Names::High_Shelf_Gain),
         juce::NormalisableRange<float>(-24.f, 24.f, 0.5f, 1.f),
         0.0f));
 
-    layout.add(std::make_unique<juce::AudioParameterFloat>("HighShelf Quality",
-        "HighShelf Quality",
+    layout.add(std::make_unique<juce::AudioParameterFloat>(params.at(Names::High_Shelf_Q),
+        params.at(Names::High_Shelf_Q),
         juce::NormalisableRange<float>(0.1f, 10.f, 0.05f, 1.f),
         1.f));
 
-    layout.add(std::make_unique<juce::AudioParameterFloat>("Peak Freq",
-        "Peak Freq",
-        juce::NormalisableRange<float>(20.f, 20000.f, 1.f, 0.25f),
+    layout.add(std::make_unique<juce::AudioParameterFloat>(params.at(Names::Peak_Frequency),
+        params.at(Names::Peak_Frequency),
+        juce::NormalisableRange<float>(MIN_FREQUENCY, MAX_FREQUENCY, 1.f, 0.25f),
         750.f));
 
-    layout.add(std::make_unique<juce::AudioParameterFloat>("Peak Gain",
-        "Peak Gain",
+    layout.add(std::make_unique<juce::AudioParameterFloat>(params.at(Names::Peak_Gain),
+        params.at(Names::Peak_Gain),
         juce::NormalisableRange<float>(-24.f, 24.f, 0.5f, 1.f),
         0.0f));
 
-    layout.add(std::make_unique<juce::AudioParameterFloat>("Peak Quality",
-        "Peak Quality",
+    layout.add(std::make_unique<juce::AudioParameterFloat>(params.at(Names::Peak_Q),
+        params.at(Names::Peak_Q),
         juce::NormalisableRange<float>(0.1f, 10.f, 0.05f, 1.f),
         1.f));
 
-    layout.add(std::make_unique<juce::AudioParameterFloat>("Compressor Threshold",
-        "Compressor Threshold",
-        juce::NormalisableRange<float>(-60, 12, 1, 1),
+    layout.add(std::make_unique<juce::AudioParameterFloat>(params.at(Names::Compressor_Threshold),
+        params.at(Names::Compressor_Threshold),
+        juce::NormalisableRange<float>(MIN_THRESHOLD, MAX_DECIBELS, 1, 1),
         0));
 
     auto attackReleaseRange = juce::NormalisableRange<float>(5, 500, 1, 1);
 
-    layout.add(std::make_unique<juce::AudioParameterFloat>("Compressor Attack",
-        "Compressor Attack",
+    layout.add(std::make_unique<juce::AudioParameterFloat>(params.at(Names::Compressor_Attack),
+        params.at(Names::Compressor_Attack),
         attackReleaseRange,
         50));
 
-    layout.add(std::make_unique<juce::AudioParameterFloat>("Compressor Release",
-        "Compressor Release",
+    layout.add(std::make_unique<juce::AudioParameterFloat>(params.at(Names::Compressor_Release),
+        params.at(Names::Compressor_Release),
         attackReleaseRange,
         250));
 
@@ -404,7 +424,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout FastVoxAudioProcessor::creat
     {
         sa.add(juce::String(choice, 1));
     }
-    layout.add(std::make_unique<juce::AudioParameterChoice>("Compressor Ratio", "Compressor Ratio", sa, 3));
+    layout.add(std::make_unique<juce::AudioParameterChoice>(params.at(Names::Compressor_Ratio), 
+        params.at(Names::Compressor_Ratio), sa, 3));
 
     juce::StringArray stringArray;
     for (int i = 0; i < 4; ++i)
@@ -415,14 +436,20 @@ juce::AudioProcessorValueTreeState::ParameterLayout FastVoxAudioProcessor::creat
         stringArray.add(str);
     }
 
-    layout.add(std::make_unique<juce::AudioParameterChoice>("LowCut Slope", "LowCut Slope", stringArray, 0));
+    layout.add(std::make_unique<juce::AudioParameterChoice>(params.at(Names::Low_Cut_Slope),
+        params.at(Names::Low_Cut_Slope), stringArray, 0));
     //layout.add(std::make_unique<juce::AudioParameterChoice>("HighShelf Slope", "HighShelf Slope", stringArray, 0));
 
-    layout.add(std::make_unique<juce::AudioParameterBool>("LowCut Bypassed", "LowCut Bypassed", false));
-    layout.add(std::make_unique<juce::AudioParameterBool>("Peak Bypassed", "Peak Bypassed", false));
-    layout.add(std::make_unique<juce::AudioParameterBool>("HighShelf Bypassed", "HighShelf Bypassed", false));
-    layout.add(std::make_unique<juce::AudioParameterBool>("Analyzer Enabled", "Analyzer Enabled", true));
-    layout.add(std::make_unique<juce::AudioParameterBool>("Compressor Bypassed", "Compressor Bypassed", false));
+    layout.add(std::make_unique<juce::AudioParameterBool>(params.at(Names::Low_Cut_Bypassed),
+        params.at(Names::Low_Cut_Bypassed), false));
+    layout.add(std::make_unique<juce::AudioParameterBool>(params.at(Names::Peak_Bypassed),
+        params.at(Names::Peak_Bypassed), false));
+    layout.add(std::make_unique<juce::AudioParameterBool>(params.at(Names::High_Shelf_Bypassed),
+        params.at(Names::High_Shelf_Bypassed), false));
+    layout.add(std::make_unique<juce::AudioParameterBool>(params.at(Names::Analyzer_Enabled), 
+        params.at(Names::Analyzer_Enabled), true));
+    layout.add(std::make_unique<juce::AudioParameterBool>(params.at(Names::Compressor_Bypassed), 
+        params.at(Names::Compressor_Bypassed), false));
 
     return layout;
 }

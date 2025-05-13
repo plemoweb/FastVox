@@ -11,6 +11,59 @@
 #include <JuceHeader.h>
 
 #include <array>
+
+namespace Params
+{
+    enum Names
+    {
+        Compressor_Ratio,
+        Compressor_Threshold,
+        Compressor_Attack,
+        Compressor_Release,
+        Compressor_Bypassed,
+        
+        Low_Cut_Frequency,
+        Low_Cut_Slope,
+        Low_Cut_Bypassed,
+
+        Peak_Frequency,
+        Peak_Gain,
+        Peak_Q,
+        Peak_Bypassed,
+
+        High_Shelf_Frequency,
+        High_Shelf_Gain,
+        High_Shelf_Q,
+        High_Shelf_Bypassed,
+
+        Analyzer_Enabled
+    };
+    inline const std::map<Names, juce::String>& GetParams()
+    {
+        static std::map<Names, juce::String> params =
+        {
+            {Compressor_Ratio,"Compressor Ratio"},
+            {Compressor_Release,"Compressor_Release"},
+            {Compressor_Bypassed,"Compressor_Bypassed"},
+
+            {Low_Cut_Frequency,"Low Cut Frequency"},
+            {Low_Cut_Slope,"Low Cut Slope"},
+            {Low_Cut_Bypassed,"Low Cut Bypassed"},
+
+            {Peak_Frequency,"Peak Frequency"},
+            {Peak_Gain,"Peak Gain"},
+            {Peak_Q,"Peak Q"},
+            {Peak_Bypassed,"Peak Bypassed"},
+
+            {High_Shelf_Frequency,"High Shelf Frequency"},
+            {High_Shelf_Gain,"High Shelf Gain"},
+            {High_Shelf_Q,"High Shelf Q"},
+            {High_Shelf_Bypassed,"High Shelf Bypassed"}
+        };
+        return params;
+    }
+};
+
 template<typename T>
 struct Fifo
 {

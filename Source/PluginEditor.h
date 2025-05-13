@@ -11,6 +11,12 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 
+#define MIN_FREQUENCY 20.f
+#define MAX_FREQUENCY 20000.f
+#define NEGATIVE_INFINITY -72.f
+#define MAX_DECIBELS 12.f
+#define MIN_THRESHOLD -60.f
+
 enum FFTOrder
 {
     order2048 = 11,
@@ -121,7 +127,7 @@ struct AnalyzerPathGenerator
         auto map = [bottom, top, negativeInfinity](float v)
             {
                 return juce::jmap(v,
-                    negativeInfinity, 0.f,
+                    negativeInfinity, MAX_DECIBELS,
                     bottom, top);
             };
 
@@ -290,6 +296,8 @@ private:
     PathProducer leftPathProducer, rightPathProducer;
 
     void drawFFTAnalysis(juce::Graphics& g, juce::Rectangle<int> bounds);
+
+    juce::AudioParameterFloat* thresholdParam{ nullptr };
 };
 //==============================================================================
 struct PowerButton : juce::ToggleButton { };
