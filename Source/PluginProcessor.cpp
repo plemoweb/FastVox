@@ -274,21 +274,22 @@ void FastVoxAudioProcessor::setStateInformation(const void* data, int sizeInByte
 ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& apvts)
 {
     ChainSettings settings;
-
-    settings.lowCutFreq = apvts.getRawParameterValue("LowCut Freq")->load();
+    using namespace Params;
+    const auto& params = GetParams();
+    settings.lowCutFreq = apvts.getRawParameterValue(params.at(Names::Low_Cut_Frequency))->load();
     //settings.highShelfFreq = apvts.getRawParameterValue("HighShelf Freq")->load();
-    settings.peakFreq = apvts.getRawParameterValue("Peak Freq")->load();
-    settings.peakGainInDecibels = apvts.getRawParameterValue("Peak Gain")->load();
-    settings.peakQuality = apvts.getRawParameterValue("Peak Quality")->load();
-    settings.lowCutSlope = static_cast<Slope>(apvts.getRawParameterValue("LowCut Slope")->load());
-    settings.highShelfFreq = apvts.getRawParameterValue("HighShelf Freq")->load();
-    settings.highShelfGainInDecibels = apvts.getRawParameterValue("HighShelf Gain")->load();
-    settings.highShelfQuality = apvts.getRawParameterValue("HighShelf Quality")->load();
+    settings.peakFreq = apvts.getRawParameterValue(params.at(Names::Peak_Frequency))->load();
+    settings.peakGainInDecibels = apvts.getRawParameterValue(params.at(Names::Peak_Gain))->load();
+    settings.peakQuality = apvts.getRawParameterValue(params.at(Names::Peak_Q))->load();
+    settings.lowCutSlope = static_cast<Slope>(apvts.getRawParameterValue(params.at(Names::Low_Cut_Slope))->load());
+    settings.highShelfFreq = apvts.getRawParameterValue(params.at(Names::High_Shelf_Frequency))->load();
+    settings.highShelfGainInDecibels = apvts.getRawParameterValue(params.at(Names::High_Shelf_Gain))->load();
+    settings.highShelfQuality = apvts.getRawParameterValue(params.at(Names::High_Shelf_Q))->load();
     //settings.highShelfSlope = static_cast<Slope>(apvts.getRawParameterValue("HighShelf Slope")->load());
 
-    settings.lowCutBypassed = apvts.getRawParameterValue("LowCut Bypassed")->load() > 0.5f;
-    settings.peakBypassed = apvts.getRawParameterValue("Peak Bypassed")->load() > 0.5f;
-    settings.highShelfBypassed = apvts.getRawParameterValue("HighShelf Bypassed")->load() > 0.5f;
+    settings.lowCutBypassed = apvts.getRawParameterValue(params.at(Names::Low_Cut_Bypassed))->load() > 0.5f;
+    settings.peakBypassed = apvts.getRawParameterValue(params.at(Names::Peak_Bypassed))->load() > 0.5f;
+    settings.highShelfBypassed = apvts.getRawParameterValue(params.at(Names::High_Shelf_Frequency))->load() > 0.5f;
 
     return settings;
 }

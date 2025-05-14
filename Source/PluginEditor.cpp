@@ -253,7 +253,15 @@ ResponseCurveComponent::ResponseCurveComponent(FastVoxAudioProcessor & p) :
 
     updateChain();
 
-    //thresholdParam = compThreshold;
+    using namespace Params;
+    const auto& paramNames = GetParams();
+    auto floatHelper = [&apvts = audioProcessor.apvts, &paramNames](auto& param, const auto& paramName)
+        {
+            param = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter(paramNames.at(paramName)));
+            jassert(param != nullptr);
+        };
+
+    floatHelper(thresholdParam, Names::Compressor_Threshold);
 
     startTimerHz(60);
 }
@@ -393,11 +401,38 @@ void ResponseCurveComponent::paint(juce::Graphics & g)
     g.setColour(Colours::black);*/
 
     //g.fillPath(border);
+    drawThreshold(g, bounds);
 
     drawTextLabels(g, bounds);
 
     g.setColour(Colours::white);
     g.drawRoundedRectangle(getRenderArea(bounds).toFloat(), 4.f, 1.f);
+}
+
+void ResponseCurveComponent::drawThreshold(juce::Graphics& g, juce::Rectangle<int> bounds)
+{
+    using namespace juce;
+    bounds = getAnalysisArea(bounds);
+    const auto top = bounds.getY();
+    const auto bottom = bounds.getBottom();
+    const auto left = bounds.getX();
+    const auto right = bounds.getRight();
+    auto mapX = [left = bounds.getX(), width = bounds.getWidth()]
+    (float frequency)
+        {
+            auto normX = juce::mapFromLog10(frequency, MIN_FREQUENCY, MAX_FREQUENCY);
+            return left + width * normX;
+        };
+
+    auto mapY = [bottom, top](float db)
+        {
+            return jmap(db, NEGATIVE_INFINITY, MAX_DECIBELS,(float)bottom,(float)top);
+        };
+    g.setColour(Colours::red);
+    g.drawHorizontalLine(mapY(thresholdParam->get()),
+        left,
+        right);
+
 }
 
 std::vector<float> ResponseCurveComponent::getFrequencies()
@@ -684,41 +719,43 @@ juce::Rectangle<int> ResponseCurveComponent::getAnalysisArea(juce::Rectangle<int
     return bounds;
 }
 //==============================================================================
+using namespace Params;
+const auto& params = GetParams();
 FastVoxAudioProcessorEditor::FastVoxAudioProcessorEditor(FastVoxAudioProcessor& p)
     : AudioProcessorEditor(&p), audioProcessor(p),
-    peakFreqSlider(*audioProcessor.apvts.getParameter("Peak Freq"), "Hz"),
-    peakGainSlider(*audioProcessor.apvts.getParameter("Peak Gain"), "dB"),
-    peakQualitySlider(*audioProcessor.apvts.getParameter("Peak Quality"), ""),
-    highShelfFreqSlider(*audioProcessor.apvts.getParameter("HighShelf Freq"), "Hz"),
-    highShelfGainSlider(*audioProcessor.apvts.getParameter("HighShelf Gain"), "dB"),
-    highShelfQualitySlider(*audioProcessor.apvts.getParameter("HighShelf Quality"), ""),
-    lowCutFreqSlider(*audioProcessor.apvts.getParameter("LowCut Freq"), "Hz"),
-    lowCutSlopeSlider(*audioProcessor.apvts.getParameter("LowCut Slope"), "dB/Oct"),
-    compThresholdSlider(*audioProcessor.apvts.getParameter("Compressor Threshold"), "dB"),
-    compAttackSlider(*audioProcessor.apvts.getParameter("Compressor Attack"), "ms"),
-    compReleaseSlider(*audioProcessor.apvts.getParameter("Compressor Release"), "ms"),
-    compRatioSlider(*audioProcessor.apvts.getParameter("Compressor Ratio"), "dB"),
+    peakFreqSlider(*audioProcessor.apvts.getParameter(params.at(Names::Peak_Frequency)), "Hz"),
+    peakGainSlider(*audioProcessor.apvts.getParameter(params.at(Names::Peak_Gain)), "dB"),
+    peakQualitySlider(*audioProcessor.apvts.getParameter(params.at(Names::Peak_Q)), ""),
+    highShelfFreqSlider(*audioProcessor.apvts.getParameter(params.at(Names::High_Shelf_Frequency)), "Hz"),
+    highShelfGainSlider(*audioProcessor.apvts.getParameter(params.at(Names::High_Shelf_Gain)), "dB"),
+    highShelfQualitySlider(*audioProcessor.apvts.getParameter(params.at(Names::High_Shelf_Q)), ""),
+    lowCutFreqSlider(*audioProcessor.apvts.getParameter(params.at(Names::Low_Cut_Frequency)), "Hz"),
+    lowCutSlopeSlider(*audioProcessor.apvts.getParameter(params.at(Names::Low_Cut_Slope)), "dB/Oct"),
+    compThresholdSlider(*audioProcessor.apvts.getParameter(params.at(Names::Compressor_Threshold)), "dB"),
+    compAttackSlider(*audioProcessor.apvts.getParameter(params.at(Names::Compressor_Attack)), "ms"),
+    compReleaseSlider(*audioProcessor.apvts.getParameter(params.at(Names::Compressor_Release)), "ms"),
+    compRatioSlider(*audioProcessor.apvts.getParameter(params.at(Names::Compressor_Ratio)), "dB"),
 
     responseCurveComponent(audioProcessor),
 
-    peakFreqSliderAttachment(audioProcessor.apvts, "Peak Freq", peakFreqSlider),
-    peakGainSliderAttachment(audioProcessor.apvts, "Peak Gain", peakGainSlider),
-    peakQualitySliderAttachment(audioProcessor.apvts, "Peak Quality", peakQualitySlider),
-    highShelfFreqSliderAttachment(audioProcessor.apvts, "HighShelf Freq", highShelfFreqSlider),
-    highShelfGainSliderAttachment(audioProcessor.apvts, "HighShelf Gain", highShelfGainSlider),
-    highShelfQualitySliderAttachment(audioProcessor.apvts, "HighShelf Quality", highShelfQualitySlider),
-    lowCutFreqSliderAttachment(audioProcessor.apvts, "LowCut Freq", lowCutFreqSlider),
-    lowCutSlopeSliderAttachment(audioProcessor.apvts, "LowCut Slope", lowCutSlopeSlider),
-    compThresholdAttachment(audioProcessor.apvts, "Compressor Threshold", compThresholdSlider),
-    compAttackAttachment(audioProcessor.apvts, "Compressor Attack", compAttackSlider),
-    compReleaseAttachment(audioProcessor.apvts, "Compressor Release", compReleaseSlider),
-    compRatioAttachment(audioProcessor.apvts, "Compressor Ratio", compRatioSlider),
+    peakFreqSliderAttachment(audioProcessor.apvts, params.at(Names::Peak_Frequency), peakFreqSlider),
+    peakGainSliderAttachment(audioProcessor.apvts, params.at(Names::Peak_Gain), peakGainSlider),
+    peakQualitySliderAttachment(audioProcessor.apvts, params.at(Names::Peak_Q), peakQualitySlider),
+    highShelfFreqSliderAttachment(audioProcessor.apvts, params.at(Names::High_Shelf_Frequency), highShelfFreqSlider),
+    highShelfGainSliderAttachment(audioProcessor.apvts, params.at(Names::High_Shelf_Gain), highShelfGainSlider),
+    highShelfQualitySliderAttachment(audioProcessor.apvts, params.at(Names::High_Shelf_Q), highShelfQualitySlider),
+    lowCutFreqSliderAttachment(audioProcessor.apvts, params.at(Names::Low_Cut_Frequency), lowCutFreqSlider),
+    lowCutSlopeSliderAttachment(audioProcessor.apvts, params.at(Names::Low_Cut_Slope), lowCutSlopeSlider),
+    compThresholdAttachment(audioProcessor.apvts, params.at(Names::Compressor_Threshold), compThresholdSlider),
+    compAttackAttachment(audioProcessor.apvts, params.at(Names::Compressor_Attack), compAttackSlider),
+    compReleaseAttachment(audioProcessor.apvts, params.at(Names::Compressor_Release), compReleaseSlider),
+    compRatioAttachment(audioProcessor.apvts, params.at(Names::Compressor_Ratio), compRatioSlider),
 
-    lowcutBypassButtonAttachment(audioProcessor.apvts, "LowCut Bypassed", lowcutBypassButton),
-    peakBypassButtonAttachment(audioProcessor.apvts, "Peak Bypassed", peakBypassButton),
-    highShelfBypassButtonAttachment(audioProcessor.apvts, "HighShelf Bypassed", highShelfBypassButton),
-    analyzerEnabledButtonAttachment(audioProcessor.apvts, "Analyzer Enabled", analyzerEnabledButton),
-    compBypassButtonAttachment(audioProcessor.apvts, "Compressor Bypassed", compBypassButton)
+    lowcutBypassButtonAttachment(audioProcessor.apvts, params.at(Names::Low_Cut_Bypassed), lowcutBypassButton),
+    peakBypassButtonAttachment(audioProcessor.apvts, params.at(Names::Peak_Bypassed), peakBypassButton),
+    highShelfBypassButtonAttachment(audioProcessor.apvts, params.at(Names::High_Shelf_Bypassed), highShelfBypassButton),
+    analyzerEnabledButtonAttachment(audioProcessor.apvts, params.at(Names::Analyzer_Enabled), analyzerEnabledButton),
+    compBypassButtonAttachment(audioProcessor.apvts, params.at(Names::Compressor_Bypassed), compBypassButton)
 {
     //peakFreqSlider.labels.add({ 0.f, "20Hz" });
     peakFreqSlider.labels.add({ 1.f, "Frequency" });

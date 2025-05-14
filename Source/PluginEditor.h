@@ -296,6 +296,7 @@ private:
     PathProducer leftPathProducer, rightPathProducer;
 
     void drawFFTAnalysis(juce::Graphics& g, juce::Rectangle<int> bounds);
+    void drawThreshold(juce::Graphics& g, juce::Rectangle<int> bounds);
 
     juce::AudioParameterFloat* thresholdParam{ nullptr };
 };

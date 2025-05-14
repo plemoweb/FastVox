@@ -43,6 +43,8 @@ namespace Params
         static std::map<Names, juce::String> params =
         {
             {Compressor_Ratio,"Compressor Ratio"},
+            {Compressor_Threshold, "Compressor Threshold"},
+            {Compressor_Attack,"Compressor_Attack"},
             {Compressor_Release,"Compressor_Release"},
             {Compressor_Bypassed,"Compressor_Bypassed"},
 
@@ -58,7 +60,9 @@ namespace Params
             {High_Shelf_Frequency,"High Shelf Frequency"},
             {High_Shelf_Gain,"High Shelf Gain"},
             {High_Shelf_Q,"High Shelf Q"},
-            {High_Shelf_Bypassed,"High Shelf Bypassed"}
+            {High_Shelf_Bypassed,"High Shelf Bypassed"},
+
+            {Analyzer_Enabled, "Analyzer Enabled"}
         };
         return params;
     }
