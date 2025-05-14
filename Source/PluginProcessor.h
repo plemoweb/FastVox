@@ -11,7 +11,11 @@
 #include <JuceHeader.h>
 
 #include <array>
-
+#define MIN_FREQUENCY 20.f
+#define MAX_FREQUENCY 20000.f
+#define NEGATIVE_INFINITY -72.f
+#define MAX_DECIBELS 12.f
+#define MIN_THRESHOLD -60.f
 namespace Params
 {
     enum Names
@@ -336,6 +340,21 @@ public:
     using BlockType = juce::AudioBuffer<float>;
     SingleChannelSampleFifo<BlockType> leftChannelFifo{ Channel::Left };
     SingleChannelSampleFifo<BlockType> rightChannelFifo{ Channel::Right };
+
+    float getRMSOutputLevel()const { return rmsOutputLevelDb; }
+    float getRMSInputLevel()const { return rmsInputLevelDb; }
+
+    juce::dsp::Compressor<float> compressor;
+
+    juce::AudioParameterFloat* compAttack{ nullptr };
+    juce::AudioParameterFloat* compRelease{ nullptr };
+    juce::AudioParameterFloat* compThreshold{ nullptr };
+    juce::AudioParameterChoice* compRatio{ nullptr };
+    juce::AudioParameterBool* compBypassed{ nullptr };
+
+    std::atomic<float> rmsInputLevelDb{ NEGATIVE_INFINITY };
+    std::atomic<float> rmsOutputLevelDb{ NEGATIVE_INFINITY };
+    
 private:
     MonoChain leftChain, rightChain;
 
@@ -351,13 +370,22 @@ private:
 
     juce::dsp::Oscillator<float> osc;
 
-    juce::dsp::Compressor<float> compressor;
+    
 
-    juce::AudioParameterFloat* compAttack{ nullptr };
-    juce::AudioParameterFloat* compRelease{ nullptr };
-    juce::AudioParameterFloat* compThreshold{ nullptr };
-    juce::AudioParameterChoice* compRatio{ nullptr };
-    juce::AudioParameterBool* compBypassed{ nullptr };
+    template<typename T>
+    float computeRMSLevel(const T& buffer)
+    {
+        int numChannels = static_cast<int>(buffer.getNumChannels());
+        int numSamples = static_cast<int>(buffer.getNumSamples());
+        auto rms = 0.f;
+        for (int chan = 0; chan < numChannels; ++chan)
+        {
+            rms += buffer.getRMSLevel(chan, 0, numSamples);
+        }
+        rms /= static_cast<float>(numChannels);
+        return rms;
+    };
+    
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FastVoxAudioProcessor)
 };

@@ -222,6 +222,8 @@ void FastVoxAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     leftChannelFifo.update(buffer);
     rightChannelFifo.update(buffer);
 
+    auto preRMS = computeRMSLevel(buffer);
+
     compressor.setAttack(compAttack->get());
     compressor.setRelease(compRelease->get());
     compressor.setThreshold(compThreshold->get());
@@ -233,7 +235,14 @@ void FastVoxAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     context.isBypassed = compBypassed->get();
     compressor.process(context);
 
+    auto postRMS = computeRMSLevel(buffer);
+    auto convertToDb = [](auto input)
+        {
+            return juce::Decibels::gainToDecibels(input);
+        };
 
+    rmsInputLevelDb.store(convertToDb(preRMS));
+    rmsOutputLevelDb.store(convertToDb(postRMS));
 }
 
 //==============================================================================

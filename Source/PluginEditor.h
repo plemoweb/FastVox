@@ -267,6 +267,9 @@ struct ResponseCurveComponent : juce::Component,
     {
         shouldShowFFTAnalysis = enabled;
     }
+
+    void update(const std::vector<float>& values);
+
 private:
     FastVoxAudioProcessor& audioProcessor;
 
@@ -299,6 +302,8 @@ private:
     void drawThreshold(juce::Graphics& g, juce::Rectangle<int> bounds);
 
     juce::AudioParameterFloat* thresholdParam{ nullptr };
+
+    float compressorGR{ 0.f };
 };
 //==============================================================================
 struct PowerButton : juce::ToggleButton { };
@@ -328,7 +333,8 @@ struct AnalyzerButton : juce::ToggleButton
 };
 /**
 */
-class FastVoxAudioProcessorEditor : public juce::AudioProcessorEditor
+class FastVoxAudioProcessorEditor : public juce::AudioProcessorEditor,
+    juce::Timer
 {
 public:
     FastVoxAudioProcessorEditor(FastVoxAudioProcessor&);
@@ -337,6 +343,8 @@ public:
     //==============================================================================
     void paint(juce::Graphics&) override;
     void resized() override;
+
+    void timerCallback() override;
 
 private:
     // This reference is provided as a quick way for your editor to

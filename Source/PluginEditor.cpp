@@ -428,11 +428,30 @@ void ResponseCurveComponent::drawThreshold(juce::Graphics& g, juce::Rectangle<in
         {
             return jmap(db, NEGATIVE_INFINITY, MAX_DECIBELS,(float)bottom,(float)top);
         };
+
+    auto zeroDb = mapY(0.f);
+
+    g.setColour(Colours::red.withAlpha(0.3f));
+    g.fillRect(Rectangle<float>::leftTopRightBottom(left,
+        zeroDb, right, mapY(compressorGR)));
+
     g.setColour(Colours::red);
     g.drawHorizontalLine(mapY(thresholdParam->get()),
         left,
         right);
 
+}
+
+void ResponseCurveComponent::update(const std::vector<float>& values)
+{
+    jassert(values.size() == 2);
+    enum
+    {
+        compressorIn,
+        compressorOut
+    };
+    compressorGR = values[compressorOut] - values[compressorIn];
+    repaint();
 }
 
 std::vector<float> ResponseCurveComponent::getFrequencies()
@@ -868,6 +887,8 @@ FastVoxAudioProcessorEditor::FastVoxAudioProcessorEditor(FastVoxAudioProcessor& 
         };
 
     setSize(720, 450);
+
+    startTimerHz(60);
 }
 
 FastVoxAudioProcessorEditor::~FastVoxAudioProcessorEditor()
@@ -989,6 +1010,17 @@ void FastVoxAudioProcessorEditor::resized()
     //highShelfFreqSlider.setBounds(bounds.removeFromTop(bounds.getHeight() * 0.33));
     //highShelfGainSlider.setBounds(bounds.removeFromTop(bounds.getHeight() * 0.5));
     //highShelfQualitySlider.setBounds(bounds);
+}
+
+void FastVoxAudioProcessorEditor::timerCallback()
+{
+    std::vector<float> values
+    {
+        audioProcessor.getRMSInputLevel(),
+        audioProcessor.getRMSOutputLevel(),
+    };
+
+    responseCurveComponent.update(values);
 }
 
 std::vector<juce::Component*> FastVoxAudioProcessorEditor::getComps()
