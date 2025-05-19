@@ -40,7 +40,12 @@ namespace Params
         High_Shelf_Q,
         High_Shelf_Bypassed,
 
-        Analyzer_Enabled
+        Analyzer_Enabled,
+
+        Input_Gain,
+        Output_Gain,
+
+        Gate_Threshold
     };
     inline const std::map<Names, juce::String>& GetParams()
     {
@@ -66,7 +71,12 @@ namespace Params
             {High_Shelf_Q,"High Shelf Q"},
             {High_Shelf_Bypassed,"High Shelf Bypassed"},
 
-            {Analyzer_Enabled, "Analyzer Enabled"}
+            {Analyzer_Enabled, "Analyzer Enabled"},
+
+            {Input_Gain,"Input Gain"},
+            {Output_Gain, "Output Gain"},
+
+            {Gate_Threshold,"Gate Threshold"}
         };
         return params;
     }
@@ -345,12 +355,16 @@ public:
     float getRMSInputLevel()const { return rmsInputLevelDb; }
 
     juce::dsp::Compressor<float> compressor;
+    juce::dsp::Gain<float> inputGain;
+    juce::dsp::Gain<float> outputGain;
 
     juce::AudioParameterFloat* compAttack{ nullptr };
     juce::AudioParameterFloat* compRelease{ nullptr };
     juce::AudioParameterFloat* compThreshold{ nullptr };
     juce::AudioParameterChoice* compRatio{ nullptr };
     juce::AudioParameterBool* compBypassed{ nullptr };
+    juce::AudioParameterFloat* inputGainValue{ nullptr };
+    juce::AudioParameterFloat* outputGainValue{ nullptr };
 
     std::atomic<float> rmsInputLevelDb{ NEGATIVE_INFINITY };
     std::atomic<float> rmsOutputLevelDb{ NEGATIVE_INFINITY };

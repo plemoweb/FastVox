@@ -363,7 +363,9 @@ private:
         compThresholdSlider,
         compAttackSlider,
         compReleaseSlider,
-        compRatioSlider;
+        compRatioSlider,
+        inputGainSlider,
+        outputGainSlider;
 
     ResponseCurveComponent responseCurveComponent;
 
@@ -381,7 +383,9 @@ private:
         compThresholdAttachment,
         compAttackAttachment,
         compReleaseAttachment,
-        compRatioAttachment;
+        compRatioAttachment,
+        inputGainAttachment,
+        outputGainAttachment;
 
     std::vector<juce::Component*> getComps();
 

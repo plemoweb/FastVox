@@ -754,6 +754,8 @@ FastVoxAudioProcessorEditor::FastVoxAudioProcessorEditor(FastVoxAudioProcessor& 
     compAttackSlider(*audioProcessor.apvts.getParameter(params.at(Names::Compressor_Attack)), "ms"),
     compReleaseSlider(*audioProcessor.apvts.getParameter(params.at(Names::Compressor_Release)), "ms"),
     compRatioSlider(*audioProcessor.apvts.getParameter(params.at(Names::Compressor_Ratio)), "dB"),
+    inputGainSlider(*audioProcessor.apvts.getParameter(params.at(Names::Input_Gain)), "dB"),
+    outputGainSlider(*audioProcessor.apvts.getParameter(params.at(Names::Output_Gain)), "dB"),
 
     responseCurveComponent(audioProcessor),
 
@@ -769,6 +771,8 @@ FastVoxAudioProcessorEditor::FastVoxAudioProcessorEditor(FastVoxAudioProcessor& 
     compAttackAttachment(audioProcessor.apvts, params.at(Names::Compressor_Attack), compAttackSlider),
     compReleaseAttachment(audioProcessor.apvts, params.at(Names::Compressor_Release), compReleaseSlider),
     compRatioAttachment(audioProcessor.apvts, params.at(Names::Compressor_Ratio), compRatioSlider),
+    inputGainAttachment(audioProcessor.apvts, params.at(Names::Input_Gain), inputGainSlider),
+    outputGainAttachment(audioProcessor.apvts, params.at(Names::Output_Gain), outputGainSlider),
 
     lowcutBypassButtonAttachment(audioProcessor.apvts, params.at(Names::Low_Cut_Bypassed), lowcutBypassButton),
     peakBypassButtonAttachment(audioProcessor.apvts, params.at(Names::Peak_Bypassed), peakBypassButton),
@@ -809,6 +813,8 @@ FastVoxAudioProcessorEditor::FastVoxAudioProcessorEditor(FastVoxAudioProcessor& 
     //compRatioSlider.labels.add({ 0.f,"1:1" });
     compRatioSlider.labels.add({ 1.f,"Ratio" });
     
+    inputGainSlider.labels.add({ 1.f,"InGain" });
+    outputGainSlider.labels.add({ 1.f,"OutGain" });
 
     //lowCutSlopeSlider.labels.add({ 0.0f, "12" });
     lowCutSlopeSlider.labels.add({ 1.f, "Slope" });
@@ -874,6 +880,8 @@ FastVoxAudioProcessorEditor::FastVoxAudioProcessorEditor(FastVoxAudioProcessor& 
                 comp->compAttackSlider.setEnabled(!bypassed);
                 comp->compReleaseSlider.setEnabled(!bypassed);
                 comp->compRatioSlider.setEnabled(!bypassed);
+                comp->inputGainSlider.setEnabled(!bypassed);
+                comp->inputGainSlider.setEnabled(!bypassed);
             }
         };
 
@@ -984,6 +992,7 @@ void FastVoxAudioProcessorEditor::resized()
     auto highShelfArea = bounds.removeFromLeft(bounds.getWidth() * 0.15);
     auto compArea1 = bounds.removeFromLeft(bounds.getWidth() * 0.35);
     auto compArea2 = bounds.removeFromLeft(bounds.getWidth() * 0.35);
+    auto gainArea = bounds.removeFromLeft(bounds.getWidth() * 0.7);
 
     lowcutBypassButton.setBounds(lowCutArea.removeFromTop(25));
     lowCutFreqSlider.setBounds(lowCutArea.removeFromTop(lowCutArea.getHeight() * 0.5));
@@ -1005,6 +1014,11 @@ void FastVoxAudioProcessorEditor::resized()
     compArea2.removeFromTop(25);
     compAttackSlider.setBounds(compArea2.removeFromTop(compArea2.getHeight() * 0.5));
     compReleaseSlider.setBounds(compArea2);
+
+    gainArea.removeFromTop(25);
+    inputGainSlider.setBounds(gainArea.removeFromTop(gainArea.getHeight()*0.5));
+    outputGainSlider.setBounds(gainArea);
+
 
     //highShelfBypassButton.setBounds(bounds.removeFromTop(25));
     //highShelfFreqSlider.setBounds(bounds.removeFromTop(bounds.getHeight() * 0.33));
@@ -1045,6 +1059,9 @@ std::vector<juce::Component*> FastVoxAudioProcessorEditor::getComps()
         &peakBypassButton,
         &highShelfBypassButton,
         &compBypassButton,
-        &analyzerEnabledButton
+        &analyzerEnabledButton,
+
+        &inputGainSlider,
+        &outputGainSlider
     };
 }

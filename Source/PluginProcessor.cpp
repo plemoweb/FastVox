@@ -34,6 +34,8 @@ FastVoxAudioProcessor::FastVoxAudioProcessor()
     floatHelper(compAttack, Names::Compressor_Attack);
     floatHelper(compRelease, Names::Compressor_Release);
     floatHelper(compThreshold, Names::Compressor_Threshold);
+    floatHelper(inputGainValue, Names::Input_Gain);
+    floatHelper(outputGainValue, Names::Output_Gain);
 
     auto choiceHelper = [&apvts = this->apvts, &params](auto& param, const auto& paramName)
         {
@@ -222,20 +224,26 @@ void FastVoxAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     leftChannelFifo.update(buffer);
     rightChannelFifo.update(buffer);
 
-    auto preRMS = computeRMSLevel(buffer);
+    auto context = juce::dsp::ProcessContextReplacing<float>(block);
+
+    inputGain.setGainDecibels(inputGainValue->get());
+    outputGain.setGainDecibels(outputGainValue->get());
 
     compressor.setAttack(compAttack->get());
     compressor.setRelease(compRelease->get());
     compressor.setThreshold(compThreshold->get());
     compressor.setRatio(compRatio->getCurrentChoiceName().getFloatValue());
-
     
-    auto context = juce::dsp::ProcessContextReplacing<float>(block);
-
     context.isBypassed = compBypassed->get();
+
+    auto preRMS = computeRMSLevel(buffer);
+    inputGain.process(context);
     compressor.process(context);
 
     auto postRMS = computeRMSLevel(buffer);
+
+    outputGain.process(context);
+
     auto convertToDb = [](auto input)
         {
             return juce::Decibels::gainToDecibels(input);
@@ -427,6 +435,16 @@ juce::AudioProcessorValueTreeState::ParameterLayout FastVoxAudioProcessor::creat
         params.at(Names::Compressor_Release),
         attackReleaseRange,
         250));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(params.at(Names::Input_Gain),
+        params.at(Names::Input_Gain),
+        juce::NormalisableRange<float>(-18.f, 18.f, 1, 1),
+        0));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(params.at(Names::Output_Gain),
+        params.at(Names::Input_Gain),
+        juce::NormalisableRange<float>(-18.f, 18.f, 1, 1),
+        0));
 
     auto choices = std::vector<double>{ 1,1.5,2,3,4,5,6,7,8,9,10,15,20,50 };
     juce::StringArray sa;

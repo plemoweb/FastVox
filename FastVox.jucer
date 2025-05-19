@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="SkFWHc" name="FastVox" projectType="audioplug" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1">
-  <MAINGROUP id="rx91Jv" name="FastVox">
+<JUCERPROJECT id="SkFWHc" name="Phononic" projectType="audioplug" useAppConfig="0"
+              addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1"
+              pluginFormats="buildAAX,buildStandalone,buildVST3">
+  <MAINGROUP id="rx91Jv" name="Phononic">
     <GROUP id="{7EF4D14E-2F79-C9E4-1301-4905BF26EBD3}" name="Source">
       <FILE id="uha276" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
