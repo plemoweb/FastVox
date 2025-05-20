@@ -365,6 +365,7 @@ public:
     juce::dsp::Compressor<float> compressor;
     juce::dsp::Gain<float> inputGain;
     juce::dsp::Gain<float> outputGain;
+    juce::dsp::NoiseGate<float> noiseGate;
 
     juce::AudioParameterFloat* compAttack{ nullptr };
     juce::AudioParameterFloat* compRelease{ nullptr };

@@ -47,6 +47,7 @@ FastVoxAudioProcessor::FastVoxAudioProcessor()
         };
 
     choiceHelper(compRatio, Names::Compressor_Ratio);
+    choiceHelper(gateRatio, Names::Gate_Ratio);
     
     auto boolHelper = [&apvts = this->apvts, &params](auto& param, const auto& paramName)
         {
@@ -153,6 +154,7 @@ void FastVoxAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock
     osc.setFrequency(440);
 
     compressor.prepare(spec);
+    noiseGate.prepare(spec);
 }
 
 void FastVoxAudioProcessor::releaseResources()
@@ -216,6 +218,13 @@ void FastVoxAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     //    juce::dsp::ProcessContextReplacing<float> stereoContext(block);
     //    osc.process(stereoContext);
     auto context = juce::dsp::ProcessContextReplacing<float>(block);
+
+    noiseGate.setAttack(gateAttack->get());
+    noiseGate.setRelease(gateRelease->get());
+    noiseGate.setRatio(gateRatio->getCurrentChoiceName().getFloatValue());
+    noiseGate.setThreshold(gateThreshold->get());
+
+    noiseGate.process(context);
 
     auto leftBlock = block.getSingleChannelBlock(0);
     auto rightBlock = block.getSingleChannelBlock(1);
@@ -309,7 +318,7 @@ ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& apvts)
 
     settings.lowCutBypassed = apvts.getRawParameterValue(params.at(Names::Low_Cut_Bypassed))->load() > 0.5f;
     settings.peakBypassed = apvts.getRawParameterValue(params.at(Names::Peak_Bypassed))->load() > 0.5f;
-    settings.highShelfBypassed = apvts.getRawParameterValue(params.at(Names::High_Shelf_Frequency))->load() > 0.5f;
+    settings.highShelfBypassed = apvts.getRawParameterValue(params.at(Names::High_Shelf_Bypassed))->load() > 0.5f;
 
     return settings;
 }
@@ -441,19 +450,19 @@ juce::AudioProcessorValueTreeState::ParameterLayout FastVoxAudioProcessor::creat
 
     layout.add(std::make_unique<juce::AudioParameterFloat>(params.at(Names::Gate_Threshold),
         params.at(Names::Gate_Threshold),
-        juce::NormalisableRange<float>(MIN_THRESHOLD, MAX_DECIBELS, 1, 1),
-        0));
+        juce::NormalisableRange<float>(-72.f, MAX_DECIBELS, 1, 1),
+        -72.f));
 
 
     layout.add(std::make_unique<juce::AudioParameterFloat>(params.at(Names::Gate_Attack),
         params.at(Names::Gate_Attack),
         attackReleaseRange,
-        50));
+        5));
 
     layout.add(std::make_unique<juce::AudioParameterFloat>(params.at(Names::Gate_Release),
         params.at(Names::Gate_Release),
         attackReleaseRange,
-        250));
+        25));
 
 
     layout.add(std::make_unique<juce::AudioParameterFloat>(params.at(Names::Input_Gain),
@@ -466,7 +475,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout FastVoxAudioProcessor::creat
         juce::NormalisableRange<float>(-18.f, 18.f, 1, 1),
         0));
 
-    auto choices = std::vector<double>{ 1,1.5,2,3,4,5,6,7,8,9,10,15,20,50 };
+    auto choices = std::vector<double>{ 1,1.5,2,3,4,5,6,7,8,9,10,15,20,50,100 };
     juce::StringArray sa;
     for (auto choice:choices)
     {
@@ -476,7 +485,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout FastVoxAudioProcessor::creat
         params.at(Names::Compressor_Ratio), sa, 3));
 
     layout.add(std::make_unique<juce::AudioParameterChoice>(params.at(Names::Gate_Ratio),
-        params.at(Names::Gate_Ratio), sa, 3));
+        params.at(Names::Gate_Ratio), sa, 14));
 
     juce::StringArray stringArray;
     for (int i = 0; i < 4; ++i)

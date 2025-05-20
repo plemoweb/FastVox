@@ -166,7 +166,7 @@ void RotarySliderWithLabels::paint(juce::Graphics & g)
     g.setFont(getTextHeight());
 
     auto numChoices = labels.size();
-    for (int i = 0; i < numChoices; ++i)
+    for (int i = 0; i < numChoices-1; ++i)
     {
         auto pos = labels[i].pos;
         jassert(0.f <= pos);
@@ -184,7 +184,15 @@ void RotarySliderWithLabels::paint(juce::Graphics & g)
 
         g.drawFittedText(str, r.toNearestInt(), juce::Justification::centred, 1);
     }
-
+    if (!labels.isEmpty())
+    {
+        auto bottomLabel = labels.getLast().label; // or hardcode "Frequency"
+        g.setFont(getTextHeight());
+        g.drawFittedText(bottomLabel,
+            getLocalBounds().removeFromBottom(getTextHeight() + 20),
+            Justification::centred,
+            1);
+    }
 }
 
 juce::Rectangle<int> RotarySliderWithLabels::getSliderBounds() const
@@ -790,55 +798,55 @@ FastVoxAudioProcessorEditor::FastVoxAudioProcessorEditor(FastVoxAudioProcessor& 
     gateBypassButtonAttachment(audioProcessor.apvts, params.at(Names::Gate_Bypassed), gateBypassButton)
 {
     //peakFreqSlider.labels.add({ 0.f, "20Hz" });
-    peakFreqSlider.labels.add({ 1.f, "Frequency" });
+    peakFreqSlider.labels.add({ 0.5f, "Pk Freq" });
 
     //peakGainSlider.labels.add({ 0.f, "-24dB" });
-    peakGainSlider.labels.add({ 1.f, "Gain" });
+    peakGainSlider.labels.add({ 0.5f, "Pk Gain" });
 
     //peakQualitySlider.labels.add({ 0.f, "0.1" });
-    peakQualitySlider.labels.add({ 1.f, "Q" });
+    peakQualitySlider.labels.add({ 0.5f, "Pk Q" });
 
     //highShelfFreqSlider.labels.add({ 0.f, "20Hz" });
-    highShelfFreqSlider.labels.add({ 1.f, "Frequency" });
+    highShelfFreqSlider.labels.add({ 0.5f, "HS Freq" });
 
     //highShelfGainSlider.labels.add({ 0.f, "-24dB" });
-    highShelfGainSlider.labels.add({ 1.f, "Gain" });
+    highShelfGainSlider.labels.add({ 0.5f, "HS Gain" });
 
     //highShelfQualitySlider.labels.add({ 0.f, "0.1" });
-    highShelfQualitySlider.labels.add({ 1.f, "Q" });
+    highShelfQualitySlider.labels.add({ 0.5f, "HS Q" });
 
     //lowCutFreqSlider.labels.add({ 0.f, "20Hz" });
-    lowCutFreqSlider.labels.add({ 1.f, "Frequency" });
+    lowCutFreqSlider.labels.add({ 0.5f, "HPF Freq" });
 
     //compThresholdSlider.labels.add({ 0.f,"-60dB" });
-    compThresholdSlider.labels.add({ 1.f,"Threshold" });
+    compThresholdSlider.labels.add({ 0.5f,"Comp Thresh" });
 
     //compAttackSlider.labels.add({ 0.f,"5ms" });
-    compAttackSlider.labels.add({ 1.f,"Attack" });
+    compAttackSlider.labels.add({ 0.5f,"Comp Atk" });
 
     //compReleaseSlider.labels.add({ 0.f,"5ms" });
-    compReleaseSlider.labels.add({ 1.f,"Release" });
+    compReleaseSlider.labels.add({ 0.5f,"Comp Rel" });
 
     //compRatioSlider.labels.add({ 0.f,"1:1" });
-    compRatioSlider.labels.add({ 1.f,"Ratio" });
+    compRatioSlider.labels.add({ 0.5f,"Ratio" });
 
     //compThresholdSlider.labels.add({ 0.f,"-60dB" });
-    gateThresholdSlider.labels.add({ 1.f,"Threshold" });
+    gateThresholdSlider.labels.add({ 0.5f,"G Thresh" });
 
     //compAttackSlider.labels.add({ 0.f,"5ms" });
-    gateAttackSlider.labels.add({ 1.f,"Attack" });
+    gateAttackSlider.labels.add({ 0.5f,"Attack" });
 
     //compReleaseSlider.labels.add({ 0.f,"5ms" });
-    gateReleaseSlider.labels.add({ 1.f,"Release" });
+    gateReleaseSlider.labels.add({ 0.5f,"Release" });
 
     //compRatioSlider.labels.add({ 0.f,"1:1" });
-    gateRatioSlider.labels.add({ 1.f,"Ratio" });
+    gateRatioSlider.labels.add({ 0.5f,"Ratio" });
     
-    inputGainSlider.labels.add({ 1.f,"InGain" });
-    outputGainSlider.labels.add({ 1.f,"OutGain" });
+    inputGainSlider.labels.add({ 0.5f,"Input" });
+    outputGainSlider.labels.add({ 0.5f,"Output" });
 
     //lowCutSlopeSlider.labels.add({ 0.0f, "12" });
-    lowCutSlopeSlider.labels.add({ 1.f, "Slope" });
+    lowCutSlopeSlider.labels.add({ 0.5f, "HPF Slope" });
 
     
 
@@ -929,7 +937,7 @@ FastVoxAudioProcessorEditor::FastVoxAudioProcessorEditor(FastVoxAudioProcessor& 
             }
         };
 
-    setSize(900, 450);
+    setSize(1000, 450);
 
     startTimerHz(60);
 }
@@ -1023,12 +1031,13 @@ void FastVoxAudioProcessorEditor::resized()
 
     bounds.removeFromTop(5);
 
-    auto gateArea = bounds.removeFromLeft(bounds.getWidth() * 0.18);
-    auto lowCutArea = bounds.removeFromLeft(bounds.getWidth() * 0.18);
-    auto peakArea = bounds.removeFromLeft(bounds.getWidth() * 0.135);
-    auto highShelfArea = bounds.removeFromLeft(bounds.getWidth() * 0.135);
+    auto gateArea = bounds.removeFromLeft(bounds.getWidth() * 0.15);
+    auto lowCutArea = bounds.removeFromLeft(bounds.getWidth() * 0.15);
+    auto peakArea = bounds.removeFromLeft(bounds.getWidth() * 0.15);
+    auto qArea = bounds.removeFromLeft(bounds.getWidth() * 0.15);
+    auto highShelfArea = bounds.removeFromLeft(bounds.getWidth() * 0.2);
     auto compArea1 = bounds.removeFromLeft(bounds.getWidth() * 0.3);
-    auto compArea2 = bounds.removeFromLeft(bounds.getWidth() * 0.3);
+    auto compArea2 = bounds.removeFromLeft(bounds.getWidth() * 0.4);
     auto gainArea = bounds.removeFromLeft(bounds.getWidth() * 0.6);
 
     gateBypassButton.setBounds(gateArea.removeFromTop(25));
@@ -1039,14 +1048,16 @@ void FastVoxAudioProcessorEditor::resized()
     lowCutSlopeSlider.setBounds(lowCutArea);
 
     highShelfBypassButton.setBounds(highShelfArea.removeFromTop(25));
-    highShelfFreqSlider.setBounds(highShelfArea.removeFromTop(highShelfArea.getHeight() * 0.33));
-    highShelfGainSlider.setBounds(highShelfArea.removeFromTop(highShelfArea.getHeight() * 0.5));
-    highShelfQualitySlider.setBounds(highShelfArea);
-
+    highShelfFreqSlider.setBounds(highShelfArea.removeFromTop(highShelfArea.getHeight() * 0.5));
+    highShelfGainSlider.setBounds(highShelfArea);
+    
     peakBypassButton.setBounds(peakArea.removeFromTop(25));
-    peakFreqSlider.setBounds(peakArea.removeFromTop(peakArea.getHeight() * 0.33));
-    peakGainSlider.setBounds(peakArea.removeFromTop(peakArea.getHeight() * 0.5));
-    peakQualitySlider.setBounds(peakArea);
+    peakFreqSlider.setBounds(peakArea.removeFromTop(peakArea.getHeight() * 0.5));
+    peakGainSlider.setBounds(peakArea);
+    
+    qArea.removeFromTop(25);
+    peakQualitySlider.setBounds(qArea.removeFromTop(qArea.getHeight() * 0.5));
+    //highShelfQualitySlider.setBounds(qArea);
 
     compBypassButton.setBounds(compArea1.removeFromTop(25));
     compThresholdSlider.setBounds(compArea1.removeFromTop(compArea1.getHeight() * 0.5));
