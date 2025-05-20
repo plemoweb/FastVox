@@ -365,7 +365,11 @@ private:
         compReleaseSlider,
         compRatioSlider,
         inputGainSlider,
-        outputGainSlider;
+        outputGainSlider,
+        gateThresholdSlider,
+        gateRatioSlider,
+        gateAttackSlider,
+        gateReleaseSlider;
 
     ResponseCurveComponent responseCurveComponent;
 
@@ -385,11 +389,15 @@ private:
         compReleaseAttachment,
         compRatioAttachment,
         inputGainAttachment,
-        outputGainAttachment;
+        outputGainAttachment,
+        gateThresholdAttachment,
+        gateRatioAttachment,
+        gateAttackAttachment,
+        gateReleaseAttachment;
 
     std::vector<juce::Component*> getComps();
 
-    PowerButton lowcutBypassButton, peakBypassButton, highShelfBypassButton, compBypassButton;
+    PowerButton lowcutBypassButton, peakBypassButton, highShelfBypassButton, compBypassButton, gateBypassButton;
     AnalyzerButton analyzerEnabledButton;
 
     using ButtonAttachment = APVTS::ButtonAttachment;
@@ -398,7 +406,8 @@ private:
         peakBypassButtonAttachment,
         highShelfBypassButtonAttachment,
         analyzerEnabledButtonAttachment,
-        compBypassButtonAttachment;
+        compBypassButtonAttachment,
+        gateBypassButtonAttachment;
 
     LookAndFeel lnf;
 

@@ -36,6 +36,9 @@ FastVoxAudioProcessor::FastVoxAudioProcessor()
     floatHelper(compThreshold, Names::Compressor_Threshold);
     floatHelper(inputGainValue, Names::Input_Gain);
     floatHelper(outputGainValue, Names::Output_Gain);
+    floatHelper(gateThreshold, Names::Gate_Threshold);
+    floatHelper(gateAttack, Names::Gate_Attack);
+    floatHelper(gateRelease, Names::Gate_Release);
 
     auto choiceHelper = [&apvts = this->apvts, &params](auto& param, const auto& paramName)
         {
@@ -52,6 +55,7 @@ FastVoxAudioProcessor::FastVoxAudioProcessor()
         };
     
     boolHelper(compBypassed, Names::Compressor_Bypassed);
+    boolHelper(gateBypassed, Names::Gate_Bypassed);
 }
 
 FastVoxAudioProcessor::~FastVoxAudioProcessor()
@@ -211,6 +215,7 @@ void FastVoxAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     //
     //    juce::dsp::ProcessContextReplacing<float> stereoContext(block);
     //    osc.process(stereoContext);
+    auto context = juce::dsp::ProcessContextReplacing<float>(block);
 
     auto leftBlock = block.getSingleChannelBlock(0);
     auto rightBlock = block.getSingleChannelBlock(1);
@@ -223,8 +228,6 @@ void FastVoxAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
 
     leftChannelFifo.update(buffer);
     rightChannelFifo.update(buffer);
-
-    auto context = juce::dsp::ProcessContextReplacing<float>(block);
 
     inputGain.setGainDecibels(inputGainValue->get());
     outputGain.setGainDecibels(outputGainValue->get());
@@ -436,6 +439,23 @@ juce::AudioProcessorValueTreeState::ParameterLayout FastVoxAudioProcessor::creat
         attackReleaseRange,
         250));
 
+    layout.add(std::make_unique<juce::AudioParameterFloat>(params.at(Names::Gate_Threshold),
+        params.at(Names::Gate_Threshold),
+        juce::NormalisableRange<float>(MIN_THRESHOLD, MAX_DECIBELS, 1, 1),
+        0));
+
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(params.at(Names::Gate_Attack),
+        params.at(Names::Gate_Attack),
+        attackReleaseRange,
+        50));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(params.at(Names::Gate_Release),
+        params.at(Names::Gate_Release),
+        attackReleaseRange,
+        250));
+
+
     layout.add(std::make_unique<juce::AudioParameterFloat>(params.at(Names::Input_Gain),
         params.at(Names::Input_Gain),
         juce::NormalisableRange<float>(-18.f, 18.f, 1, 1),
@@ -454,6 +474,9 @@ juce::AudioProcessorValueTreeState::ParameterLayout FastVoxAudioProcessor::creat
     }
     layout.add(std::make_unique<juce::AudioParameterChoice>(params.at(Names::Compressor_Ratio), 
         params.at(Names::Compressor_Ratio), sa, 3));
+
+    layout.add(std::make_unique<juce::AudioParameterChoice>(params.at(Names::Gate_Ratio),
+        params.at(Names::Gate_Ratio), sa, 3));
 
     juce::StringArray stringArray;
     for (int i = 0; i < 4; ++i)
@@ -478,6 +501,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout FastVoxAudioProcessor::creat
         params.at(Names::Analyzer_Enabled), true));
     layout.add(std::make_unique<juce::AudioParameterBool>(params.at(Names::Compressor_Bypassed), 
         params.at(Names::Compressor_Bypassed), false));
+    layout.add(std::make_unique<juce::AudioParameterBool>(params.at(Names::Gate_Bypassed),
+        params.at(Names::Gate_Bypassed), false));
 
     return layout;
 }

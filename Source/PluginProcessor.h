@@ -45,7 +45,11 @@ namespace Params
         Input_Gain,
         Output_Gain,
 
-        Gate_Threshold
+        Gate_Threshold,
+        Gate_Ratio,
+        Gate_Attack,
+        Gate_Release,
+        Gate_Bypassed
     };
     inline const std::map<Names, juce::String>& GetParams()
     {
@@ -76,7 +80,11 @@ namespace Params
             {Input_Gain,"Input Gain"},
             {Output_Gain, "Output Gain"},
 
-            {Gate_Threshold,"Gate Threshold"}
+            {Gate_Threshold,"Gate Threshold"},
+            {Gate_Ratio,"Gate Ratio"},
+            {Gate_Attack,"Gate Attack"},
+            {Gate_Release,"Gate Release"},
+            {Gate_Bypassed,"Gate Bypassed"}
         };
         return params;
     }
@@ -363,8 +371,15 @@ public:
     juce::AudioParameterFloat* compThreshold{ nullptr };
     juce::AudioParameterChoice* compRatio{ nullptr };
     juce::AudioParameterBool* compBypassed{ nullptr };
+
     juce::AudioParameterFloat* inputGainValue{ nullptr };
     juce::AudioParameterFloat* outputGainValue{ nullptr };
+
+    juce::AudioParameterFloat* gateAttack{ nullptr };
+    juce::AudioParameterFloat* gateRelease{ nullptr };
+    juce::AudioParameterFloat* gateThreshold{ nullptr };
+    juce::AudioParameterChoice* gateRatio{ nullptr };
+    juce::AudioParameterBool* gateBypassed{ nullptr };
 
     std::atomic<float> rmsInputLevelDb{ NEGATIVE_INFINITY };
     std::atomic<float> rmsOutputLevelDb{ NEGATIVE_INFINITY };
