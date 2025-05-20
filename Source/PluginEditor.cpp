@@ -269,7 +269,8 @@ ResponseCurveComponent::ResponseCurveComponent(FastVoxAudioProcessor & p) :
             jassert(param != nullptr);
         };
 
-    floatHelper(thresholdParam, Names::Compressor_Threshold);
+    floatHelper(compThresholdParam, Names::Compressor_Threshold);
+    floatHelper(gateThresholdParam, Names::Gate_Threshold);
 
     startTimerHz(60);
 }
@@ -444,10 +445,13 @@ void ResponseCurveComponent::drawThreshold(juce::Graphics& g, juce::Rectangle<in
         zeroDb, right, mapY(compressorGR)));
 
     g.setColour(Colours::red);
-    g.drawHorizontalLine(mapY(thresholdParam->get()),
+    g.drawHorizontalLine(mapY(compThresholdParam->get()),
         left,
         right);
-
+    g.setColour(Colours::white);
+    g.drawHorizontalLine(mapY(gateThresholdParam->get()),
+        left,
+        right);
 }
 
 void ResponseCurveComponent::update(const std::vector<float>& values)
@@ -910,8 +914,8 @@ FastVoxAudioProcessorEditor::FastVoxAudioProcessorEditor(FastVoxAudioProcessor& 
                 comp->compAttackSlider.setEnabled(!bypassed);
                 comp->compReleaseSlider.setEnabled(!bypassed);
                 comp->compRatioSlider.setEnabled(!bypassed);
-                comp->inputGainSlider.setEnabled(!bypassed);
-                comp->outputGainSlider.setEnabled(!bypassed);
+                //comp->inputGainSlider.setEnabled(!bypassed);
+                //comp->outputGainSlider.setEnabled(!bypassed);
             }
         };
 

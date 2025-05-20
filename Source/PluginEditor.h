@@ -301,7 +301,8 @@ private:
     void drawFFTAnalysis(juce::Graphics& g, juce::Rectangle<int> bounds);
     void drawThreshold(juce::Graphics& g, juce::Rectangle<int> bounds);
 
-    juce::AudioParameterFloat* thresholdParam{ nullptr };
+    juce::AudioParameterFloat* compThresholdParam{ nullptr };
+    juce::AudioParameterFloat* gateThresholdParam{ nullptr };
 
     float compressorGR{ 0.f };
 };

@@ -153,8 +153,10 @@ void FastVoxAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock
     osc.prepare(spec);
     osc.setFrequency(440);
 
+    inputGain.prepare(spec);
     compressor.prepare(spec);
     noiseGate.prepare(spec);
+    outputGain.prepare(spec);
 }
 
 void FastVoxAudioProcessor::releaseResources()
@@ -219,6 +221,9 @@ void FastVoxAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     //    osc.process(stereoContext);
     auto context = juce::dsp::ProcessContextReplacing<float>(block);
 
+    inputGain.setGainDecibels(inputGainValue->get());
+    inputGain.process(context);
+
     noiseGate.setAttack(gateAttack->get());
     noiseGate.setRelease(gateRelease->get());
     noiseGate.setRatio(gateRatio->getCurrentChoiceName().getFloatValue());
@@ -238,7 +243,7 @@ void FastVoxAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     leftChannelFifo.update(buffer);
     rightChannelFifo.update(buffer);
 
-    inputGain.setGainDecibels(inputGainValue->get());
+
     outputGain.setGainDecibels(outputGainValue->get());
 
     compressor.setAttack(compAttack->get());
@@ -249,11 +254,12 @@ void FastVoxAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     context.isBypassed = compBypassed->get();
 
     auto preRMS = computeRMSLevel(buffer);
-    inputGain.process(context);
+
     compressor.process(context);
 
     auto postRMS = computeRMSLevel(buffer);
 
+    context.isBypassed = false;
     outputGain.process(context);
 
     auto convertToDb = [](auto input)
